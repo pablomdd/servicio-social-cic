@@ -27,7 +27,7 @@ N = 30
 for i in range(N):
     try:
         data_ard = arduino.readline()
-        data_str = str(data_ard)
+        data_str = str(data_ard.decode('cp437'))
         temp_data = float(data_str) * (5.0 / sensor_res)
         print(temp_data)
         t.append(temp_t)
