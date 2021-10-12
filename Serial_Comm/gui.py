@@ -33,18 +33,19 @@ class TopPanel(wx.Panel):
         self.axes.plot(x, y, "C1o--")
         self.canvas.draw()
 
-
+# Bottom Panel shows GUI options and selections.
 class BottomPanel(wx.Panel):
     def __init__(self, parent, top):
         super().__init__(parent)
         self.graph = top
+        # Buttons
         self.buttonStart = wx.Button(self, id=1, label="Start",
                                      pos=(400, 40))
         self.buttonStart.Bind(wx.EVT_BUTTON, self.OnStartClick)
         self.buttonStop = wx.Button(self, id=2, label="Stop",
                                     pos=(400, 40))
         self.buttonStop.Bind(wx.EVT_BUTTON, self.OnStopClick)
-
+        # Labels
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.TimeInterval, self.timer)
         self.labelPort = wx.StaticText(self, label="Serial Port:",
@@ -63,6 +64,7 @@ class BottomPanel(wx.Panel):
         self.buttonSaveData.Bind(wx.EVT_BUTTON, self.OnStartSave)
         self.buttonSaveData.Hide()
         self.buttonStop.Hide()
+        # Vars initialization
         self.n = 0
         self.serialConnection = False
         self.x = np.array([])
@@ -71,10 +73,12 @@ class BottomPanel(wx.Panel):
         self.values = []
         self.stopAcquisition = False
         self.serialArduino = None
+        # Reading constants
         self.highValueBoard = 5.0
         self.boardResolution = 1023
         self.samplingTime = 500  # ms
 
+    # Save reading data
     def OnStartSave(self, event):
         fileDialog = wx.FileDialog(self, "Input setting file path", "", "",
                                    "CSV files(*.csv)|*.*", wx.FD_SAVE)
@@ -89,6 +93,7 @@ class BottomPanel(wx.Panel):
             except:
                 pass
 
+    # Start calibration
     def OnStartClick(self, event):
         if self.serialArduino != None:
             self.serialArduino.close()
@@ -125,10 +130,15 @@ class BottomPanel(wx.Panel):
                 self.serialConnection = False
                 wx.CallLater(50, self.ShowErrorMessageConnection)
 
+    # Stop Reading
     def OnStopClick(self, event):
         self.buttonStop.Hide()
         self.stopAcquisition = True
 
+    """ Reading function
+    It takes the serial port connection and make a lecture every x seconds.
+    It stops when it get to the samplin amount preselected or the stop button it's pressed.
+    """
     def TimeInterval(self, event):
         self.buttonStop.Show()
         self.buttonStart.Hide()
@@ -163,6 +173,9 @@ class BottomPanel(wx.Panel):
                 self.timer.Stop()
                 self.serialConnection = False
 
+    """ getSerialPorts
+    It makes an automatic search of all serial ports available in Windows and Linux.
+    """
     def getSerialPorts(self) -> list:
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -192,7 +205,9 @@ class BottomPanel(wx.Panel):
         wx.MessageBox('Communication with board failed.',
                       'Communication Error', wx.OK | wx.ICON_ERROR)
 
+""" Main Function
 
+"""
 class Main(wx.Frame):
     def __init__(self):
         super().__init__(None, title="SPM Arduino and wxPython",
