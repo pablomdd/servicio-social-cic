@@ -1,4 +1,3 @@
-from gi.repository import Gtk, GLib, Gio
 from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas)
 from matplotlib.figure import Figure
@@ -10,6 +9,7 @@ import glob
 import sys
 import gi
 gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Gio
 
 
 class AppWindow(Gtk.ApplicationWindow):
@@ -62,32 +62,35 @@ class AppWindow(Gtk.ApplicationWindow):
         self.port = None
         self.logic_level = 5.0
         self.board_resolution = 1023
-
-        # Example init plot
-        self.fig = Figure(figsize=(5, 4), dpi=100)
-        self.ax = self.fig.add_subplot()
-        self.t = np.arange(0.0, 3.0, 0.015)
-        self.v = ((self.logic_level / 2) + (self.logic_level/2)) * \
-            np.sin(2*np.pi*self.t)
-        self.ax.plot(self.t, self.v, 'C1o--')
-        self.ax.set_xlabel("Time (s)")
-        self.ax.set_ylabel("Voltage (V)")
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.set_size_request(300, 250)
-        hpaned.add2(self.canvas)
-
         self.samples = 1
         self.micro_board = None
         self.time_interval = 500  # 500ms
         self.values = []
 
+        # Example plot on init
+        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.t = np.arange(0.0, 3.0, 0.015)
+        self.v = ((self.logic_level / 2) + (self.logic_level/2)) * \
+            np.sin(2*np.pi*self.t)
+
+        self.ax.plot(self.t, self.v, 'C1o--')
+        self.ax.set_xlabel("Time (s)")
+        self.ax.set_ylabel("Voltage (V)")
+
+        # Add Graph to Canvas 
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.set_size_request(300, 250)
+        hpaned.add2(self.canvas)
+
         self.add(hpaned)
         self.set_size_request(800, 600)
         self.show_all()
 
-    def on_button_clicked(self, button):
-        self.destroy()
-
+    """ getSerialPorts()
+    Explore serial ports available and reuturn a list of string names.
+    Works both on Windows and Linux.
+    """
     def getSerialPorts(self) -> list:
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -109,6 +112,9 @@ class AppWindow(Gtk.ApplicationWindow):
                 pass
         return result
 
+    """ on_port_change()
+    Updates the serial port when the combobox changes.
+    """
     def on_port_change(self, combo):
         available_port = str(combo.get_active_text())
         if available_port != None:
@@ -117,6 +123,9 @@ class AppWindow(Gtk.ApplicationWindow):
             self.port = None
             self.on_no_port_available(self)
 
+    """ on_no_port_available()
+    Shows an pop up window with an error message when no serial port is found.
+    """
     def on_no_port_available(self, widget):
         port_dialog = Gtk.MessageDialog(transient_for=self,
                                         flags=0,
@@ -127,6 +136,9 @@ class AppWindow(Gtk.ApplicationWindow):
         port_dialog.run()
         port_dialog.destroy()
 
+    """ on_samples_changed()
+    Updates the amount of samples.
+    """
     def on_samples_changed(self, samples_spin):
         self.samples = samples_spin.get_value_as_int()
 
@@ -147,7 +159,7 @@ class Application(Gtk.Application):
 
     def do_activate(self):
         if not self.window:
-            self.window = AppWindow(application=self, title="Grocery List")
+            self.window = AppWindow(application=self, title="Calibración de Sensores")
         self.window.show_all()
         self.window.present()
 
