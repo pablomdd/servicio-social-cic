@@ -1,3 +1,4 @@
+from gi.repository import Gtk, GLib, Gio
 from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas)
 from matplotlib.figure import Figure
@@ -9,7 +10,6 @@ import glob
 import sys
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gio
 
 
 class AppWindow(Gtk.ApplicationWindow):
@@ -52,7 +52,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.stop_button.connect("clicked", self.on_button_stop)
         vbox.pack_start(self.stop_button, False, False, 0)
 
-        self.save_button = Gtk.Button.new_with_label("save")
+        self.save_button = Gtk.Button.new_with_label("Save")
         self.save_button.connect("clicked", self.on_button_save)
         vbox.pack_start(self.save_button, False, False, 0)
 
@@ -61,10 +61,11 @@ class AppWindow(Gtk.ApplicationWindow):
         # App vars initialization
         self.port = None
         self.logic_level = 5.0
+        self.baud_rate = 9600
         self.board_resolution = 1023
         self.samples = 1
         self.micro_board = None
-        self.time_interval = 500  # 500ms
+        self.time_interval = 0.5  # 0.5s
         self.values = []
 
         # Example plot on init
@@ -78,7 +79,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Voltage (V)")
 
-        # Add Graph to Canvas 
+        # Add Graph to Canvas
         self.canvas = FigureCanvas(self.fig)
         self.canvas.set_size_request(300, 250)
         hpaned.add2(self.canvas)
@@ -91,6 +92,7 @@ class AppWindow(Gtk.ApplicationWindow):
     Explore serial ports available and reuturn a list of string names.
     Works both on Windows and Linux.
     """
+
     def getSerialPorts(self) -> list:
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -115,6 +117,7 @@ class AppWindow(Gtk.ApplicationWindow):
     """ on_port_change()
     Updates the serial port when the combobox changes.
     """
+
     def on_port_change(self, combo):
         available_port = str(combo.get_active_text())
         if available_port != None:
@@ -126,6 +129,7 @@ class AppWindow(Gtk.ApplicationWindow):
     """ on_no_port_available()
     Shows an pop up window with an error message when no serial port is found.
     """
+
     def on_no_port_available(self, widget):
         port_dialog = Gtk.MessageDialog(transient_for=self,
                                         flags=0,
@@ -139,11 +143,110 @@ class AppWindow(Gtk.ApplicationWindow):
     """ on_samples_changed()
     Updates the amount of samples.
     """
+
     def on_samples_changed(self, samples_spin):
         self.samples = samples_spin.get_value_as_int()
 
+    """on_button_start()
+    Start button starts a async thread that executes the get_time() 
+    method to read from the arduino board.
+
+    """
+
     def on_button_start(self, widget):
-        pass
+        print("Start")
+        self.timer = threading.Thread(target=self.get_time)
+        self.event = threading.Event()
+        self.timer.daemon = True
+        self.timer.start()
+
+    """get_time()
+    This method reads the serial port from the arduino. It stores data in a Numpy 
+    array t for time, and v for value read.
+    """
+
+    def get_time(self):
+        time_value = value = count = 0
+        self.t = np.array([])
+        self.v = np.array([])
+        self.start_button.hide()
+        self.save_button.hide()
+        self.stop_button.show()
+        take_data = False
+
+        if self.micro_board != None:
+            self.micro_board.close()
+        # Initialiaze Serial Connection if there's a valid Serial port selected
+        if self.port != None:
+            try:
+                # Serial initialization
+                self.micro_board = serial.Serial(
+                    str(self.port), self.baud_rate, timeout=1)
+                time.sleep(1)
+                # Reset Buffer
+                self.micro_board.reset_input_buffer()
+                # Reading flag set to tue
+                take_data = True
+            except:
+                if not self.event.is_set():
+                    print("Stop")
+                    # Stop async thread
+                    self.event.set()
+                    self.timer = None
+                GLib.idle_add(self.on_failed_connection)
+                take_data = False
+        # Serial port reading when reading flag is true.
+        if take_data:
+            if time_value == 0:
+                print("Time(s) \t Voltage(V)")
+            while not self.event.is_set():
+                # Stop when we get to the samples amount limit.
+                if count >= self.samples:
+                    print("Stop")
+                    # Stop async thread
+                    self.event.set()
+                    # Reset timer
+                    self.timer = None
+                    # Close Serial connection
+                    if self.micro_board != None:
+                        self.micro_board.close()
+                    break
+                try:
+                    # Read serial por and decode.
+                    temp = str(self.micro_board.readline().decode('cp437'))
+                    temp = temp.replace("\n", "")
+                    value = (float(temp) * self.logic_level /
+                             self.board_resolution)
+                    print_console = "Time: " + str(time_value) + " (s)\t"
+                    print_console += "Voltage: " + \
+                        "{0:.3f}".format(value) + " (V)"
+                    print(print_console)
+                except:
+                    pass
+                # Reading delay
+                time.sleep(self.time_interval)
+                # Current sample count increase
+                count += 1
+                # Update time by our time interval
+                time_value += self.time_interval
+
+            time.sleep(0.5)
+            self.start_button.show()
+            self.save_button.show()
+            self.stop_button.hide()
+
+    """ on_faild_connection()
+    Shows an pop up window with an error message when the initilization connection with the board failed.
+    """
+
+    def on_faild_connection(self):
+        failed_connection_dialog = Gtk.MessageDialog(transient_for=self,
+                                                     flags=0,
+                                                     message_type=Gtk.MessageType.ERROR,
+                                                     text="Board communication error. No data will be taken",
+                                                     title="Serial Error")
+        failed_connection_dialog.run()
+        failed_connection_dialog.destroy()
 
     def on_button_stop(self, widget):
         pass
@@ -159,7 +262,8 @@ class Application(Gtk.Application):
 
     def do_activate(self):
         if not self.window:
-            self.window = AppWindow(application=self, title="Calibración de Sensores")
+            self.window = AppWindow(
+                application=self, title="Calibración de Sensores")
         self.window.show_all()
         self.window.present()
 
