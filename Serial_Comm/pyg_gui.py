@@ -213,10 +213,8 @@ class AppWindow(Gtk.ApplicationWindow):
                     break
                 try:
                     # Read serial por and decode.
-                    temp = self.micro_board.readline()
-                    print(temp)
-                    temp = str(temp.decode('cp437')).replace("\n", "")
-                    print(temp)
+                    temp = str(self.micro_board.readline().decode('cp437'))
+                    temp = temp.replace("\n", "")
                     value = (float(temp) * self.logic_level /
                              self.board_resolution)
                     print_console = "Time: " + str(time_value) + " (s)\t"
