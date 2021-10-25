@@ -214,10 +214,12 @@ class AppWindow(Gtk.ApplicationWindow):
                     self.event.set()
                     # Reset timer
                     self.timer = None
+
                     # Close Serial connection
                     if self.micro_board != None:
                         self.micro_board.close()
                     break
+                    
                 try:
                     # Read serial por and decode.
                     temp = str(self.micro_board.readline().decode('cp437'))
@@ -233,7 +235,6 @@ class AppWindow(Gtk.ApplicationWindow):
                                        "," + "{0:.4f}".format(value))
                     self.t = np.append(self.t, time_value)
                     self.v = np.append(self.v, value)
-                    self.draw(self.t, self.v)
                 except:
                     pass
                 # Reading delay
@@ -244,6 +245,8 @@ class AppWindow(Gtk.ApplicationWindow):
                 time_value += self.time_interval
 
             time.sleep(0.5)
+            self.draw(self.t, self.v)
+
             self.start_button.show()
             self.save_button.show()
             self.stop_button.hide()
