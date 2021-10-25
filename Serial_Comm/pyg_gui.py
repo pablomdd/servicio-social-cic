@@ -88,6 +88,13 @@ class AppWindow(Gtk.ApplicationWindow):
         self.set_size_request(800, 600)
         self.show_all()
 
+    def draw(self, x, y):
+        self.ax.clear()
+        self.ax.plot(x, y, 'C1o--')
+        self.ax.set_xlabel("Time (s)")
+        self.ax.set_ylabel("Voltage (V)")
+        self.canvas.draw()
+
     """ getSerialPorts()
     Explore serial ports available and reuturn a list of string names.
     Works both on Windows and Linux.
@@ -221,6 +228,12 @@ class AppWindow(Gtk.ApplicationWindow):
                     print_console += "Voltage: " + \
                         "{0:.3f}".format(value) + " (V)"
                     print(print_console)
+                    # Add to graph
+                    self.values.append(str(time_value) +
+                                       "," + "{0:.4f}".format(value))
+                    self.t = np.append(self.t, time_value)
+                    self.v = np.append(self.v, value)
+                    self.draw(self.t, self.v)
                 except:
                     pass
                 # Reading delay
@@ -249,10 +262,38 @@ class AppWindow(Gtk.ApplicationWindow):
         failed_connection_dialog.destroy()
 
     def on_button_stop(self, widget):
-        pass
+        print("Stop Button")
+        self.event.set()
+        self.timer = None
 
     def on_button_save(self, widget):
-        pass
+        print("Save Button")
+        self.save_button.hide()
+        self.start_button.hide()
+        save_dialog = Gtk.FileChooserDialog(
+            title="Save file as...", parent=self, action=Gtk.FileChooserAction.SAVE)
+        save_dialog.add_buttons(Gtk.STOCK_CANCEL,
+                                Gtk.ResponseType.CANCEL,
+                                Gtk.STOCK_SAVE,
+                                Gtk.ResponseType.OK)
+        filter_csv = Gtk.FileFilter()
+        filter_csv.add_pattern("*.CSV")
+        filter_csv.set_name("CSV")
+        save_dialog.add_filter(filter_csv)
+        response = save_dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            filename = save_dialog.get_filename()
+            if not filename.endswith(".csv"):
+                filename += ".csv"
+            new_file = open(filename, 'w')
+            new_file.write("Time(s),Voltage(V)" + "\n")
+            for i in range(len(self.values)):
+                new_file.write(self.values[i] + "\n")
+            new_file.close()
+        save_dialog.destroy()
+        self.start_button.show()
+        self.save_button.show()
 
 
 class Application(Gtk.Application):
@@ -263,9 +304,22 @@ class Application(Gtk.Application):
     def do_activate(self):
         if not self.window:
             self.window = AppWindow(
-                application=self, title="Calibración de Sensores")
+                application=self, title="Single Point Measurement - PyGtk")
         self.window.show_all()
+        self.window.save_button.hide()
+        self.window.stop_button.hide()
         self.window.present()
+
+    def do_shutdown(self):
+        if self.window.micro_board != None:
+            try:
+                self.micro_board.close()
+            except:
+                pass
+        print("Byeee")
+        Gtk.Application.do_shutdown(self)
+        if self.window:
+            self.window.destroy()
 
 
 if __name__ == "__main__":
