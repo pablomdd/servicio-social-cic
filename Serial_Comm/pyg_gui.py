@@ -56,19 +56,23 @@ class AppWindow(Gtk.ApplicationWindow):
             sensor_combobox.append_text(str(option))
         sensor_combobox.set_active(2)
         vbox.pack_start(sensor_combobox, False, False, 0)
-
+        # Button Start
         self.start_button = Gtk.Button.new_with_label("Start")
         self.start_button.connect("clicked", self.on_button_start)
         vbox.pack_start(self.start_button, False, False, 0)
-
+        # Button Stop
         self.stop_button = Gtk.Button.new_with_label("Stop")
         self.stop_button.connect("clicked", self.on_button_stop)
         vbox.pack_start(self.stop_button, False, False, 0)
-
+        # Button Save
         self.save_button = Gtk.Button.new_with_label("Save")
         self.save_button.connect("clicked", self.on_button_save)
         vbox.pack_start(self.save_button, False, False, 0)
-
+        # Button Calibration
+        self.calibrate_button = Gtk.Button.new_with_label("Calibrate")
+        self.calibrate_button.connect("clicked", self.on_button_calibrate)
+        vbox.pack_start(self.calibrate_button, False, False, 0)
+        
         hpaned.add1(vbox)
 
         # App vars initialization
@@ -345,6 +349,33 @@ class AppWindow(Gtk.ApplicationWindow):
         self.start_button.show()
         self.save_button.show()
 
+    def on_button_calibrate(self, widget):
+        print("Calibrate button")
+        if not self.t or not self.v:
+            print("Unable to make calibration. No data or data corrupted.")
+            return
+        
+        x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibration(self.t, self.v) 
+
+    def getMagnetometerCalibration(self, x, y):
+        x_min = x.amin()
+        x_max = x.amax()
+        y_min = y.amin()
+        y_max = y.amax()
+
+        # Scale Factor
+        x_sf = y_max - y_min / x_max - x_min
+        y_sf = x_max - x_min / y_max - y_min
+        # Offset
+        x_off = ((x_max - x_min / 2) - x_max) * x_sf
+        y_off = ((y_max - y_min / 2) - y_max) * y_sf
+
+        return x_sf, y_sf, x_off, y_off
+
+        
+
+        
+        
 
 class Application(Gtk.Application):
     def __init__(self, *args, **kwargs) -> None:
