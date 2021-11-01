@@ -80,7 +80,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.board_resolution = 1023
         self.samples = 0
         self.micro_board = None
-        self.time_interval = 0.5  # seconds (s)
+        self.time_interval = 0.1  # seconds (s)
         self.values = []
 
         # Example sine wave plot on init
@@ -120,6 +120,14 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
+
+        for i in range(x.size):
+            xitem = x[i]
+            yitem = y[i]
+            #etiqueta = "{:.1f}".format(xitem)
+            etiqueta = str(i)
+            self.ax.annotate(etiqueta, (xitem,yitem), textcoords="offset points",xytext=(0,10),ha="center")
+    
         # self.ax.set_xlim([-50, 50])
         # self.ax.set_ylim([-50, 50])
         self.canvas.draw()
@@ -264,8 +272,7 @@ class AppWindow(Gtk.ApplicationWindow):
                     print(mpu_reading[7], mpu_reading[8])
                     
                     # Add to graph
-                    # self.values.append(str(time_value) +
-                    #                    "," + "{0:.4f}".format(value))
+                    
                     self.t = np.append(self.t, float(mpu_reading[7]))
                     self.v = np.append(self.v, float(mpu_reading[8]))
                 except Exception as e:
@@ -321,15 +328,18 @@ class AppWindow(Gtk.ApplicationWindow):
         filter_csv.set_name("CSV")
         save_dialog.add_filter(filter_csv)
         response = save_dialog.run()
-
+        # self.values.append(str(time_value) +
+                    #                    "," + "{0:.4f}".format(value))
         if response == Gtk.ResponseType.OK:
             filename = save_dialog.get_filename()
             if not filename.endswith(".csv"):
                 filename += ".csv"
             new_file = open(filename, 'w')
             new_file.write("Time(s),Voltage(V)" + "\n")
-            for i in range(len(self.values)):
-                new_file.write(self.values[i] + "\n")
+            for i in range(self.t.size):
+                # Write Magnetometer reading from memory
+                new_file.write("{0:.4f}".format(self.t[i]) + "," + "{0:.4f}".format(self.v[i]) + "\n")
+                # new_file.write(self.values[i] + "\n")
             new_file.close()
         save_dialog.destroy()
         self.start_button.show()
