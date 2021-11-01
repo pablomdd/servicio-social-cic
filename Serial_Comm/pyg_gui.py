@@ -39,10 +39,23 @@ class AppWindow(Gtk.ApplicationWindow):
         vbox.pack_start(samples_label, False, False, 0)
 
         # Spinbox samples
-        samples_spin = Gtk.SpinButton.new_with_range(1, 1000, 1)
+        samples_spin = Gtk.SpinButton.new_with_range(1, 1000, 10)
         samples_spin.set_digits(0)
         samples_spin.connect("value-changed", self.on_samples_changed)
         vbox.pack_start(samples_spin, False, False, 0)
+
+        # Label Sensor Reading
+        serial_port_label = Gtk.Label.new("MPU sensor to be read:")
+        vbox.pack_start(serial_port_label, False, True, 0)
+        # Combobox Serial Port
+        sensor_options = ["Aceleromenter", "Gyroscope", "Magnetometer"] # MPU options
+        sensor_combobox = Gtk.ComboBoxText()
+        sensor_combobox.set_entry_text_column(0)
+        sensor_combobox.connect("changed", self.on_sensor_option_change)
+        for option in sensor_options:
+            sensor_combobox.append_text(str(option))
+        sensor_combobox.set_active(2)
+        vbox.pack_start(sensor_combobox, False, False, 0)
 
         self.start_button = Gtk.Button.new_with_label("Start")
         self.start_button.connect("clicked", self.on_button_start)
@@ -59,16 +72,18 @@ class AppWindow(Gtk.ApplicationWindow):
         hpaned.add1(vbox)
 
         # App vars initialization
+        self.current_sensor = "Magnetometer"
         self.port = None
         self.logic_level = 5.0
-        self.baud_rate = 9600
+        # self.baud_rate = 9600
+        self.baud_rate = 115200
         self.board_resolution = 1023
-        self.samples = 1
+        self.samples = 0
         self.micro_board = None
-        self.time_interval = 0.5  # 0.5s
+        self.time_interval = 0.5  # seconds (s)
         self.values = []
 
-        # Example plot on init
+        # Example sine wave plot on init
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.t = np.arange(0.0, 3.0, 0.015)
@@ -93,6 +108,20 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Voltage (V)")
+        self.canvas.draw()
+
+    """ draw_magnetometer()
+    Receives a numpy list X and Y to graph the elipsis read by the MPU Magnetometer 
+    on the X and Y axis.
+    """
+
+    def draw_magnetometer(self, x, y):
+        self.ax.clear()
+        self.ax.plot(x, y, 'C1o--')
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        # self.ax.set_xlim([-50, 50])
+        # self.ax.set_ylim([-50, 50])
         self.canvas.draw()
 
     """ getSerialPorts()
@@ -154,6 +183,9 @@ class AppWindow(Gtk.ApplicationWindow):
     def on_samples_changed(self, samples_spin):
         self.samples = samples_spin.get_value_as_int()
 
+    def on_sensor_option_change(self, combo):
+        self.current_sensor = str(combo.get_active_text())
+
     """on_button_start()
     Start button starts a async thread that executes the get_time() 
     method to read from the arduino board.
@@ -205,7 +237,7 @@ class AppWindow(Gtk.ApplicationWindow):
         # Serial port reading when reading flag is true.
         if take_data:
             if time_value == 0:
-                print("Time(s) \t Voltage(V)")
+                print("X (mT) \t Y (mT)")
             while not self.event.is_set():
                 # Stop when we get to the samples amount limit.
                 if count >= self.samples:
@@ -224,18 +256,20 @@ class AppWindow(Gtk.ApplicationWindow):
                     # Read serial por and decode.
                     temp = str(self.micro_board.readline().decode('cp437'))
                     temp = temp.replace("\n", "")
-                    value = (float(temp) * self.logic_level /
-                             self.board_resolution)
-                    print_console = "Time: " + str(time_value) + " (s)\t"
-                    print_console += "Voltage: " + \
-                        "{0:.3f}".format(value) + " (V)"
-                    print(print_console)
+                    mpu_reading = temp.split(",")
+
+                    # if self.current_sensor == "Magnetometer":
+                    # else:
+                    
+                    print(mpu_reading[7], mpu_reading[8])
+                    
                     # Add to graph
-                    self.values.append(str(time_value) +
-                                       "," + "{0:.4f}".format(value))
-                    self.t = np.append(self.t, time_value)
-                    self.v = np.append(self.v, value)
-                except:
+                    # self.values.append(str(time_value) +
+                    #                    "," + "{0:.4f}".format(value))
+                    self.t = np.append(self.t, float(mpu_reading[7]))
+                    self.v = np.append(self.v, float(mpu_reading[8]))
+                except Exception as e:
+                    print("Cannot make reading. //", e)
                     pass
                 # Reading delay
                 time.sleep(self.time_interval)
@@ -245,7 +279,10 @@ class AppWindow(Gtk.ApplicationWindow):
                 time_value += self.time_interval
 
             time.sleep(0.5)
-            self.draw(self.t, self.v)
+            
+            #self.draw(self.t, self.v)
+            if self.current_sensor == "Magnetometer":
+                self.draw_magnetometer(self.t, self.v)
 
             self.start_button.show()
             self.save_button.show()
