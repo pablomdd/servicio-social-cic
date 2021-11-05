@@ -9,13 +9,22 @@ def getMagnetometerCalibrationParameters(x, y):
     y_max = y.max()
 
     # Scale Factor
-    x_sf = y_max - y_min / x_max - x_min
-    y_sf = x_max - x_min / y_max - y_min
-    # Offset
-    x_off = ((x_max - x_min / 2) - x_max) * x_sf
-    y_off = ((y_max - y_min / 2) - y_max) * y_sf
+    x_sf = (y_max - y_min) / (x_max - x_min)
+    y_sf = (x_max - x_min) / (y_max - y_min)
 
+    if x_sf <= 1:
+        x_sf = 1
+    
+    if y_sf <= 1:
+        y_sf = 1
+
+    # Offset
+    x_off = ((x_max - x_min) / 2 - x_max) * x_sf
+    y_off = ((y_max - y_min) / 2 - y_max) * y_sf
+
+    print(f"{x_sf}\t, {y_sf}\t, {x_off}\t, {y_off}\t")
     return x_sf, y_sf, x_off, y_off
+
 def getMagnetometerCalibrationValues(x, y):
     x_sf, y_sf, x_off, y_off = getMagnetometerCalibrationParameters(x, y)
     mx = np.array([])
@@ -23,6 +32,7 @@ def getMagnetometerCalibrationValues(x, y):
     for x_i, y_i in np.nditer([x, y]):
         mx_i = x_sf * x_i + x_off
         my_i = y_sf * y_i + y_off
+        print(f"{mx_i}\t {my_i}\t {np.rad2deg(np.arctan2(my_i, mx_i))}")
         mx = np.append(mx, mx_i)
         my = np.append(my, my_i)
     return mx, my
@@ -38,17 +48,17 @@ if __name__ == "__main__":
         line_count = 0
         for row in csv_reader:
             if line_count == 0:
-                print(f'Column names are {", ".join(row)}')
+                # print(f'Column names are {", ".join(row)}')
                 line_count += 1
                 continue
             x = np.append(x, float(row[0]))
             y = np.append(y, float(row[1]))
 
-            print(f'\t{row[0]} , {row[1]}')
+            # print(f'\t{row[0]} , {row[1]}')
             line_count += 1
         print(f'Processed {line_count} lines.')
     mx,my = getMagnetometerCalibrationValues(x, y)
-    print(mx, my)
+    # print(mx, my)
 
     plt.style.use('ggplot')
     fig, ax = plt.subplots(1, 2, figsize=(12, 7))
