@@ -136,6 +136,26 @@ class AppWindow(Gtk.ApplicationWindow):
         # self.ax.set_ylim([-50, 50])
         self.canvas.draw()
 
+    """ draw_calibrated_magnetometer()
+    Receives a numpy list X and Y to graph the elipsis read by the MPU Magnetometer 
+    on the X and Y axis.
+    """
+
+    def draw_calibrated_magnetometer(self, x, y, mx ,my):
+        self.fig.add_subplot(211)
+        self.ax.clear()
+        self.ax.plot(x, y, 'C1o--')
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+
+        self.fig.add_subplot(221)
+        self.ax.clear()
+        self.ax.plot(mx, my, 'C1o--')
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        
+        self.canvas.draw()
+
     """ getSerialPorts()
     Explore serial ports available and reuturn a list of string names.
     Works both on Windows and Linux.
@@ -351,17 +371,30 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def on_button_calibrate(self, widget):
         print("Calibrate button")
-        if not self.t or not self.v:
+        if not self.t[0] or not self.v[0]:
             print("Unable to make calibration. No data or data corrupted.")
             return
         
-        x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibration(self.t, self.v) 
+        mx,my = self.getMagnetometerCalibrationValues(self.t, self.t)
+        self.draw_calibrated_magnetometer(self.t, self.v, mx, my)
 
-    def getMagnetometerCalibration(self, x, y):
-        x_min = x.amin()
-        x_max = x.amax()
-        y_min = y.amin()
-        y_max = y.amax()
+    def getMagnetometerCalibrationValues(self, x, y):
+        x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibrationParameters(x, y)
+        print(x_sf, y_sf, x_off, y_off)
+        mx = np.array([])
+        my = np.array([])
+        for x_i, y_i in np.nditer([x, y]):
+            mx_i = x_sf * x_i + x_off
+            my_i = y_sf * y_i + y_off
+            mx = np.append(mx, mx_i)
+            my = np.append(my, my_i)
+        return mx, my 
+
+    def getMagnetometerCalibrationParameters(self, x, y):
+        x_min = x.min()
+        x_max = x.max()
+        y_min = y.min()
+        y_max = y.max()
 
         # Scale Factor
         x_sf = y_max - y_min / x_max - x_min
