@@ -1,5 +1,5 @@
 /*
-Basic_I2C.ino
+Basic_SPI.ino
 Brian R Taylor
 brian.taylor@bolderflight.com
 
@@ -23,8 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include "MPU9250.h"
 
-// an MPU9250 object with the MPU-9250 sensor on I2C bus 0 with address 0x68
-MPU9250 IMU(Wire,0x68);
+// an MPU9250 object with the MPU-9250 sensor on SPI bus 0 and chip select pin 10
+MPU9250 IMU(SPI,10);
 int status;
 
 void setup() {
@@ -48,23 +48,23 @@ void loop() {
   IMU.readSensor();
   // display the data
   Serial.print(IMU.getAccelX_mss(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getAccelY_mss(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getAccelZ_mss(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getGyroX_rads(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getGyroY_rads(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getGyroZ_rads(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getMagX_uT(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getMagY_uT(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.print(IMU.getMagZ_uT(),6);
-  Serial.print(",");
+  Serial.print("\t");
   Serial.println(IMU.getTemperature_C(),6);
-  delay(25);
+  delay(100);
 }

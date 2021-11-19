@@ -85,7 +85,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.board_resolution = 1023
         self.samples = 0
         self.micro_board = None
-        self.time_interval = 0.1  # seconds (s)
+        self.time_interval = 0.025  # seconds (s)
         self.values = []
 
         # Example sine wave plot on init
@@ -318,7 +318,7 @@ class AppWindow(Gtk.ApplicationWindow):
             #self.draw(self.t, self.v)
             if self.current_sensor == "Magnetometer":
                 self.draw_magnetometer(self.t, self.v)
-                
+
             self.start_button.show()
             self.save_button.show()
             self.stop_button.hide()
