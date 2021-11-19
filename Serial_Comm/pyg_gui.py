@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import take
 from gi.repository import Gtk, GLib, Gio
 from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas)
@@ -32,6 +33,7 @@ class AppWindow(Gtk.ApplicationWindow):
         for port in ports:
             port_combobox.append_text(str(port))
         port_combobox.set_active(0)
+        self.port = str(port_combobox.get_active_text())
         vbox.pack_start(port_combobox, False, False, 0)
 
         # Label Samples
@@ -77,7 +79,6 @@ class AppWindow(Gtk.ApplicationWindow):
 
         # App vars initialization
         self.current_sensor = "Magnetometer"
-        self.port = None
         self.logic_level = 5.0
         # self.baud_rate = 9600
         self.baud_rate = 115200
@@ -246,10 +247,12 @@ class AppWindow(Gtk.ApplicationWindow):
         take_data = False
 
         if self.micro_board != None:
+            print("Closing board before init")
             self.micro_board.close()
         # Initialiaze Serial Connection if there's a valid Serial port selected
         if self.port != None:
             try:
+                print("Opening Serial Comm on port:", self.port)
                 # Serial initialization
                 self.micro_board = serial.Serial(
                     str(self.port), self.baud_rate, timeout=1)
@@ -273,7 +276,7 @@ class AppWindow(Gtk.ApplicationWindow):
             while not self.event.is_set():
                 # Stop when we get to the samples amount limit.
                 if count >= self.samples:
-                    print("Stop")
+                    print("Completed sampling - Stop")
                     # Stop async thread
                     self.event.set()
                     # Reset timer
@@ -281,6 +284,7 @@ class AppWindow(Gtk.ApplicationWindow):
 
                     # Close Serial connection
                     if self.micro_board != None:
+                        self.micro_board.reset_input_buffer()
                         self.micro_board.close()
                     break
                     
@@ -314,7 +318,7 @@ class AppWindow(Gtk.ApplicationWindow):
             #self.draw(self.t, self.v)
             if self.current_sensor == "Magnetometer":
                 self.draw_magnetometer(self.t, self.v)
-
+                
             self.start_button.show()
             self.save_button.show()
             self.stop_button.hide()
@@ -324,6 +328,7 @@ class AppWindow(Gtk.ApplicationWindow):
     """
 
     def on_faild_connection(self):
+        print("Failed Connection")
         failed_connection_dialog = Gtk.MessageDialog(transient_for=self,
                                                      flags=0,
                                                      message_type=Gtk.MessageType.ERROR,
@@ -336,6 +341,8 @@ class AppWindow(Gtk.ApplicationWindow):
         print("Stop Button")
         self.event.set()
         self.timer = None
+        self.micro_board.reset_input_buffer()
+        self.micro_board.close()
 
     def on_button_save(self, widget):
         print("Save Button")
