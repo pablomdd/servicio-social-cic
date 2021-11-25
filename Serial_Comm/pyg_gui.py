@@ -245,6 +245,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.start_button.hide()
         self.save_button.hide()
         self.stop_button.show()
+        self.calibrate_button.hide()
         take_data = False
 
         if self.micro_board != None:
@@ -265,11 +266,13 @@ class AppWindow(Gtk.ApplicationWindow):
             except:
                 if not self.event.is_set():
                     print("Stop")
-                    # Stop async thread
+                    # Stop thread
                     self.event.set()
                     self.timer = None
                 GLib.idle_add(self.on_failed_connection)
                 take_data = False
+        else:
+            print("No serial port available. Restart.")
         # Serial port reading when reading flag is true.
         if take_data:
             if time_value == 0:
@@ -277,12 +280,11 @@ class AppWindow(Gtk.ApplicationWindow):
             while not self.event.is_set():
                 # Stop when we get to the samples amount limit.
                 if count >= self.samples:
-                    print("Completed sampling - Stop")
-                    # Stop async thread
+                    print("Sampling completed - Stoping...")
+                    # Stop thread
                     self.event.set()
                     # Reset timer
                     self.timer = None
-
                     # Close Serial connection
                     if self.micro_board != None:
                         self.micro_board.reset_input_buffer()
@@ -324,6 +326,11 @@ class AppWindow(Gtk.ApplicationWindow):
             self.save_button.show()
             self.stop_button.hide()
 
+            if self.current_sensor == "Magnetometer":
+                self.calibrate_button.show()
+            else:
+                self.calibrate_button.hide()
+
     """ on_faild_connection()
     Shows an pop up window with an error message when the initilization connection with the board failed.
     """
@@ -342,8 +349,9 @@ class AppWindow(Gtk.ApplicationWindow):
         print("Stop Button")
         self.event.set()
         self.timer = None
-        self.micro_board.reset_input_buffer()
-        self.micro_board.close()
+        if self.micro_board != None:    
+            self.micro_board.reset_input_buffer()
+            self.micro_board.close()
 
     def on_button_save(self, widget):
         print("Save Button")
@@ -432,6 +440,7 @@ class Application(Gtk.Application):
         self.window.show_all()
         self.window.save_button.hide()
         self.window.stop_button.hide()
+        self.window.calibrate_button.hide()
         self.window.present()
 
     def do_shutdown(self):
