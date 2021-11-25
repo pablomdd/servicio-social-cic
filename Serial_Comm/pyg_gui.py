@@ -98,6 +98,8 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(self.t, self.v, 'C1o--')
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Voltage (V)")
+        self.ax.grid(visible=True)
+        self.ax.set_title(f"Sample Graph")
 
         # Add Graph to Canvas
         self.canvas = FigureCanvas(self.fig)
@@ -113,6 +115,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
+        self.ax.grid(visible=True)
         self.ax.set_title(f"{self.current_sensor} reading.")
         self.canvas.draw()
 
@@ -126,8 +129,9 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
+        self.ax.grid(visible=True)
         self.ax.set_title(f"Magnetometer reading.")
-
+        
         for i in range(x.size):
             xitem = x[i]
             yitem = y[i]
@@ -150,6 +154,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(mx, my, 'C2o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
+        self.ax.grid(visible=True)
         self.ax.set_title("Magnetometer calibration")
         self.canvas.draw()
 
