@@ -91,11 +91,11 @@ class AppWindow(Gtk.ApplicationWindow):
         # Example sine wave plot on init
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.t = np.arange(0.0, 3.0, 0.015)
-        self.v = ((self.logic_level / 2) + (self.logic_level/2)) * \
-            np.sin(2*np.pi*self.t)
+        self.x = np.arange(0.0, 3.0, 0.015)
+        self.y = ((self.logic_level / 2) + (self.logic_level/2)) * \
+            np.sin(2*np.pi*self.x)
 
-        self.ax.plot(self.t, self.v, 'C1o--')
+        self.ax.plot(self.x, self.y, 'C1o--')
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Voltage (V)")
         self.ax.grid(visible=True)
@@ -240,8 +240,8 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def get_time(self):
         time_value = value = count = 0
-        self.t = np.array([])
-        self.v = np.array([])
+        self.x = np.array([])
+        self.y = np.array([])
         self.start_button.hide()
         self.save_button.hide()
         self.stop_button.show()
@@ -304,8 +304,8 @@ class AppWindow(Gtk.ApplicationWindow):
                     
                     # Add to graph
                     
-                    self.t = np.append(self.t, float(mpu_reading[7]))
-                    self.v = np.append(self.v, float(mpu_reading[8]))
+                    self.x = np.append(self.x, float(mpu_reading[7]))
+                    self.y = np.append(self.y, float(mpu_reading[8]))
                 except Exception as e:
                     print("Cannot make reading. //", e)
                     pass
@@ -318,9 +318,9 @@ class AppWindow(Gtk.ApplicationWindow):
 
             time.sleep(0.5)
             
-            #self.draw(self.t, self.v)
+            #self.draw(self.x, self.y)
             if self.current_sensor == "Magnetometer":
-                self.draw_magnetometer(self.t, self.v)
+                self.draw_magnetometer(self.x, self.y)
 
             self.start_button.show()
             self.save_button.show()
@@ -376,9 +376,9 @@ class AppWindow(Gtk.ApplicationWindow):
                 filename += ".csv"
             new_file = open(filename, 'w')
             new_file.write("Time(s),Voltage(V)" + "\n")
-            for i in range(self.t.size):
+            for i in range(self.x.size):
                 # Write Magnetometer reading from memory
-                new_file.write("{0:.4f}".format(self.t[i]) + "," + "{0:.4f}".format(self.v[i]) + "\n")
+                new_file.write("{0:.4f}".format(self.x[i]) + "," + "{0:.4f}".format(self.y[i]) + "\n")
                 # new_file.write(self.values[i] + "\n")
             new_file.close()
         save_dialog.destroy()
@@ -387,12 +387,12 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def on_button_calibrate(self, widget):
         print("Calibrate button")
-        if not self.t[0] or not self.v[0]:
+        if not self.x[0] or not self.y[0]:
             print("Unable to make calibration. No data or data corrupted.")
             return
         
-        mx,my = self.getMagnetometerCalibrationValues(self.t, self.t)
-        self.draw_calibrated_magnetometer(self.t, self.v, mx, my)
+        mx,my = self.getMagnetometerCalibrationValues(self.x, self.y)
+        self.draw_calibrated_magnetometer(self.x, self.y, mx, my)
 
     def getMagnetometerCalibrationValues(self, x, y):
         x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibrationParameters(x, y)
