@@ -1,5 +1,5 @@
 /*
-Basic_I2C.ino
+WOM_I2C.ino
 Brian R Taylor
 brian.taylor@bolderflight.com
 
@@ -41,30 +41,16 @@ void setup() {
     Serial.println(status);
     while(1) {}
   }
+  // enabling wake on motion low power mode with a threshold of 400 mg and
+  // an accelerometer data rate of 15.63 Hz. 
+  IMU.enableWakeOnMotion(400,MPU9250::LP_ACCEL_ODR_15_63HZ);
+  // attaching the interrupt to microcontroller pin 1
+  pinMode(1,INPUT);
+  attachInterrupt(1,wakeUp,RISING);
 }
 
-void loop() {
-  // read the sensor
-  IMU.readSensor();
-  // display the data
-  Serial.print(IMU.getAccelX_mss(),6);
-  Serial.print(",");
-  Serial.print(IMU.getAccelY_mss(),6);
-  Serial.print(",");
-  Serial.print(IMU.getAccelZ_mss(),6);
-  Serial.print(",");
-  Serial.print(IMU.getGyroX_rads(),6);
-  Serial.print(",");
-  Serial.print(IMU.getGyroY_rads(),6);
-  Serial.print(",");
-  Serial.print(IMU.getGyroZ_rads(),6);
-  Serial.print(",");
-  Serial.print(IMU.getMagX_uT(),6);
-  Serial.print(",");
-  Serial.print(IMU.getMagY_uT(),6);
-  Serial.print(",");
-  Serial.print(IMU.getMagZ_uT(),6);
-  Serial.print(",");
-  Serial.println(IMU.getTemperature_C(),6);
-  delay(25);
+void loop() {}
+
+void wakeUp() {
+  Serial.println("Awake!");
 }

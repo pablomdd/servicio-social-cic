@@ -1,3 +1,4 @@
+from numpy.core.fromnumeric import take
 from gi.repository import Gtk, GLib, Gio
 from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas)
@@ -32,6 +33,7 @@ class AppWindow(Gtk.ApplicationWindow):
         for port in ports:
             port_combobox.append_text(str(port))
         port_combobox.set_active(0)
+        self.port = str(port_combobox.get_active_text())
         vbox.pack_start(port_combobox, False, False, 0)
 
         # Label Samples
@@ -56,43 +58,48 @@ class AppWindow(Gtk.ApplicationWindow):
             sensor_combobox.append_text(str(option))
         sensor_combobox.set_active(2)
         vbox.pack_start(sensor_combobox, False, False, 0)
-
+        # Button Start
         self.start_button = Gtk.Button.new_with_label("Start")
         self.start_button.connect("clicked", self.on_button_start)
         vbox.pack_start(self.start_button, False, False, 0)
-
+        # Button Stop
         self.stop_button = Gtk.Button.new_with_label("Stop")
         self.stop_button.connect("clicked", self.on_button_stop)
         vbox.pack_start(self.stop_button, False, False, 0)
-
+        # Button Save
         self.save_button = Gtk.Button.new_with_label("Save")
         self.save_button.connect("clicked", self.on_button_save)
         vbox.pack_start(self.save_button, False, False, 0)
-
+        # Button Calibration
+        self.calibrate_button = Gtk.Button.new_with_label("Calibrate")
+        self.calibrate_button.connect("clicked", self.on_button_calibrate)
+        vbox.pack_start(self.calibrate_button, False, False, 0)
+        
         hpaned.add1(vbox)
 
         # App vars initialization
-        self.current_sensor = "Magnetometer"
-        self.port = None
+        self.current_sensor = str(sensor_combobox.get_active_text())     
         self.logic_level = 5.0
         # self.baud_rate = 9600
         self.baud_rate = 115200
         self.board_resolution = 1023
         self.samples = 0
         self.micro_board = None
-        self.time_interval = 0.1  # seconds (s)
+        self.time_interval = 0.025  # seconds (s)
         self.values = []
 
         # Example sine wave plot on init
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.t = np.arange(0.0, 3.0, 0.015)
-        self.v = ((self.logic_level / 2) + (self.logic_level/2)) * \
-            np.sin(2*np.pi*self.t)
+        self.x = np.arange(0.0, 3.0, 0.015)
+        self.y = ((self.logic_level / 2) + (self.logic_level/2)) * \
+            np.sin(2*np.pi*self.x)
 
-        self.ax.plot(self.t, self.v, 'C1o--')
+        self.ax.plot(self.x, self.y, 'C1o--')
         self.ax.set_xlabel("Time (s)")
         self.ax.set_ylabel("Voltage (V)")
+        self.ax.grid(visible=True)
+        self.ax.set_title(f"Sample Graph")
 
         # Add Graph to Canvas
         self.canvas = FigureCanvas(self.fig)
@@ -106,8 +113,10 @@ class AppWindow(Gtk.ApplicationWindow):
     def draw(self, x, y):
         self.ax.clear()
         self.ax.plot(x, y, 'C1o--')
-        self.ax.set_xlabel("Time (s)")
-        self.ax.set_ylabel("Voltage (V)")
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        self.ax.grid(visible=True)
+        self.ax.set_title(f"{self.current_sensor} reading.")
         self.canvas.draw()
 
     """ draw_magnetometer()
@@ -120,7 +129,9 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
-
+        self.ax.grid(visible=True)
+        self.ax.set_title(f"Magnetometer reading.")
+        
         for i in range(x.size):
             xitem = x[i]
             yitem = y[i]
@@ -130,6 +141,21 @@ class AppWindow(Gtk.ApplicationWindow):
     
         # self.ax.set_xlim([-50, 50])
         # self.ax.set_ylim([-50, 50])
+        self.canvas.draw()
+
+    """ draw_calibrated_magnetometer()
+    Receives a numpy list X and Y to graph the elipsis read by the MPU Magnetometer 
+    on the X and Y axis.
+    """
+
+    def draw_calibrated_magnetometer(self, x, y, mx ,my):
+        self.ax.clear()
+        self.ax.plot(x, y, 'C1o--')
+        self.ax.plot(mx, my, 'C2o--')
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        self.ax.grid(visible=True)
+        self.ax.set_title("Magnetometer calibration")
         self.canvas.draw()
 
     """ getSerialPorts()
@@ -214,18 +240,21 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def get_time(self):
         time_value = value = count = 0
-        self.t = np.array([])
-        self.v = np.array([])
+        self.x = np.array([])
+        self.y = np.array([])
         self.start_button.hide()
         self.save_button.hide()
         self.stop_button.show()
+        self.calibrate_button.hide()
         take_data = False
 
         if self.micro_board != None:
+            print("Closing board before init")
             self.micro_board.close()
         # Initialiaze Serial Connection if there's a valid Serial port selected
         if self.port != None:
             try:
+                print("Opening Serial Comm on port:", self.port)
                 # Serial initialization
                 self.micro_board = serial.Serial(
                     str(self.port), self.baud_rate, timeout=1)
@@ -237,11 +266,13 @@ class AppWindow(Gtk.ApplicationWindow):
             except:
                 if not self.event.is_set():
                     print("Stop")
-                    # Stop async thread
+                    # Stop thread
                     self.event.set()
                     self.timer = None
                 GLib.idle_add(self.on_failed_connection)
                 take_data = False
+        else:
+            print("No serial port available. Restart.")
         # Serial port reading when reading flag is true.
         if take_data:
             if time_value == 0:
@@ -249,14 +280,14 @@ class AppWindow(Gtk.ApplicationWindow):
             while not self.event.is_set():
                 # Stop when we get to the samples amount limit.
                 if count >= self.samples:
-                    print("Stop")
-                    # Stop async thread
+                    print("Sampling completed - Stoping...")
+                    # Stop thread
                     self.event.set()
                     # Reset timer
                     self.timer = None
-
                     # Close Serial connection
                     if self.micro_board != None:
+                        self.micro_board.reset_input_buffer()
                         self.micro_board.close()
                     break
                     
@@ -273,8 +304,8 @@ class AppWindow(Gtk.ApplicationWindow):
                     
                     # Add to graph
                     
-                    self.t = np.append(self.t, float(mpu_reading[7]))
-                    self.v = np.append(self.v, float(mpu_reading[8]))
+                    self.x = np.append(self.x, float(mpu_reading[7]))
+                    self.y = np.append(self.y, float(mpu_reading[8]))
                 except Exception as e:
                     print("Cannot make reading. //", e)
                     pass
@@ -287,19 +318,25 @@ class AppWindow(Gtk.ApplicationWindow):
 
             time.sleep(0.5)
             
-            #self.draw(self.t, self.v)
+            #self.draw(self.x, self.y)
             if self.current_sensor == "Magnetometer":
-                self.draw_magnetometer(self.t, self.v)
+                self.draw_magnetometer(self.x, self.y)
 
             self.start_button.show()
             self.save_button.show()
             self.stop_button.hide()
+
+            if self.current_sensor == "Magnetometer":
+                self.calibrate_button.show()
+            else:
+                self.calibrate_button.hide()
 
     """ on_faild_connection()
     Shows an pop up window with an error message when the initilization connection with the board failed.
     """
 
     def on_faild_connection(self):
+        print("Failed Connection")
         failed_connection_dialog = Gtk.MessageDialog(transient_for=self,
                                                      flags=0,
                                                      message_type=Gtk.MessageType.ERROR,
@@ -312,6 +349,9 @@ class AppWindow(Gtk.ApplicationWindow):
         print("Stop Button")
         self.event.set()
         self.timer = None
+        if self.micro_board != None:    
+            self.micro_board.reset_input_buffer()
+            self.micro_board.close()
 
     def on_button_save(self, widget):
         print("Save Button")
@@ -336,15 +376,57 @@ class AppWindow(Gtk.ApplicationWindow):
                 filename += ".csv"
             new_file = open(filename, 'w')
             new_file.write("Time(s),Voltage(V)" + "\n")
-            for i in range(self.t.size):
+            for i in range(self.x.size):
                 # Write Magnetometer reading from memory
-                new_file.write("{0:.4f}".format(self.t[i]) + "," + "{0:.4f}".format(self.v[i]) + "\n")
+                new_file.write("{0:.4f}".format(self.x[i]) + "," + "{0:.4f}".format(self.y[i]) + "\n")
                 # new_file.write(self.values[i] + "\n")
             new_file.close()
         save_dialog.destroy()
         self.start_button.show()
         self.save_button.show()
 
+    def on_button_calibrate(self, widget):
+        print("Calibrate button")
+        if not self.x[0] or not self.y[0]:
+            print("Unable to make calibration. No data or data corrupted.")
+            return
+        
+        mx,my = self.getMagnetometerCalibrationValues(self.x, self.y)
+        self.draw_calibrated_magnetometer(self.x, self.y, mx, my)
+
+    def getMagnetometerCalibrationValues(self, x, y):
+        x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibrationParameters(x, y)
+        print(f"x_sf = {x_sf}, y_sf = {y_sf}, x_off = {x_off}, y_off = {y_off}")
+        mx = np.array([])
+        my = np.array([])
+        for x_i, y_i in np.nditer([x, y]):
+            mx_i = x_sf * x_i + x_off
+            my_i = y_sf * y_i + y_off
+            mx = np.append(mx, mx_i)
+            my = np.append(my, my_i)
+        return mx, my 
+
+    def getMagnetometerCalibrationParameters(self, x, y):
+        x_min = x.min()
+        x_max = x.max()
+        y_min = y.min()
+        y_max = y.max()
+        # Scale Factor
+        x_sf = (y_max - y_min) / (x_max - x_min)
+        y_sf = (x_max - x_min) / (y_max - y_min)
+        if x_sf <= 1:
+            x_sf = 1
+        if y_sf <= 1:
+            y_sf = 1
+        # Offset
+        x_off = ((x_max - x_min) / 2 - x_max) * x_sf
+        y_off = ((y_max - y_min) / 2 - y_max) * y_sf
+        return x_sf, y_sf, x_off, y_off
+
+        
+
+        
+        
 
 class Application(Gtk.Application):
     def __init__(self, *args, **kwargs) -> None:
@@ -358,6 +440,7 @@ class Application(Gtk.Application):
         self.window.show_all()
         self.window.save_button.hide()
         self.window.stop_button.hide()
+        self.window.calibrate_button.hide()
         self.window.present()
 
     def do_shutdown(self):
