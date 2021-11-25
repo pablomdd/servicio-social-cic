@@ -78,7 +78,7 @@ class AppWindow(Gtk.ApplicationWindow):
         hpaned.add1(vbox)
 
         # App vars initialization
-        self.current_sensor = "Magnetometer"
+        self.current_sensor = str(sensor_combobox.get_active_text())     
         self.logic_level = 5.0
         # self.baud_rate = 9600
         self.baud_rate = 115200
