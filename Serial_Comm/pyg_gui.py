@@ -111,8 +111,9 @@ class AppWindow(Gtk.ApplicationWindow):
     def draw(self, x, y):
         self.ax.clear()
         self.ax.plot(x, y, 'C1o--')
-        self.ax.set_xlabel("Time (s)")
-        self.ax.set_ylabel("Voltage (V)")
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        self.ax.set_title(f"{self.current_sensor} reading.")
         self.canvas.draw()
 
     """ draw_magnetometer()
@@ -125,6 +126,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.ax.plot(x, y, 'C1o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
+        self.ax.set_title(f"Magnetometer reading.")
 
         for i in range(x.size):
             xitem = x[i]
@@ -143,18 +145,12 @@ class AppWindow(Gtk.ApplicationWindow):
     """
 
     def draw_calibrated_magnetometer(self, x, y, mx ,my):
-        self.fig.add_subplot(211)
         self.ax.clear()
         self.ax.plot(x, y, 'C1o--')
+        self.ax.plot(mx, my, 'C2o--')
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
-
-        self.fig.add_subplot(221)
-        self.ax.clear()
-        self.ax.plot(mx, my, 'C1o--')
-        self.ax.set_xlabel("x")
-        self.ax.set_ylabel("y")
-        
+        self.ax.set_title("Magnetometer calibration")
         self.canvas.draw()
 
     """ getSerialPorts()
@@ -387,7 +383,7 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def getMagnetometerCalibrationValues(self, x, y):
         x_sf, y_sf, x_off, y_off = self.getMagnetometerCalibrationParameters(x, y)
-        print(x_sf, y_sf, x_off, y_off)
+        print(f"x_sf = {x_sf}, y_sf = {y_sf}, x_off = {x_off}, y_off = {y_off}")
         mx = np.array([])
         my = np.array([])
         for x_i, y_i in np.nditer([x, y]):
@@ -402,14 +398,16 @@ class AppWindow(Gtk.ApplicationWindow):
         x_max = x.max()
         y_min = y.min()
         y_max = y.max()
-
         # Scale Factor
-        x_sf = y_max - y_min / x_max - x_min
-        y_sf = x_max - x_min / y_max - y_min
+        x_sf = (y_max - y_min) / (x_max - x_min)
+        y_sf = (x_max - x_min) / (y_max - y_min)
+        if x_sf <= 1:
+            x_sf = 1
+        if y_sf <= 1:
+            y_sf = 1
         # Offset
-        x_off = ((x_max - x_min / 2) - x_max) * x_sf
-        y_off = ((y_max - y_min / 2) - y_max) * y_sf
-
+        x_off = ((x_max - x_min) / 2 - x_max) * x_sf
+        y_off = ((y_max - y_min) / 2 - y_max) * y_sf
         return x_sf, y_sf, x_off, y_off
 
         
