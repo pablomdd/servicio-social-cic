@@ -1,4 +1,4 @@
-//definicion de pines
+// definicion de pines
 const int pinMotor1 = 8;    // 28BYJ48 - In1
 const int pinMotor2 = 9;    // 28BYJ48 - In2
 const int pinMotor3 = 10;   // 28BYJ48 - In3
@@ -35,18 +35,18 @@ void setup(){
 }
 
 void loop(){
+    delay(2500);
     for (int i = 0; i < pasosPorVuelta + 100; i++) {
         sentidoHorario();
         delayMicroseconds(velocidadMotor);
     }
-    delay(100);
-
+    // This delay helps the step motor to make the turn properly without getting stucked.
+    delay(50);
     for (int i = 0; i < pasosPorVuelta; i++) {
         sentidoAntihorario();
         delayMicroseconds(velocidadMotor);
     }
-
-    delay(5000);
+    delay(2500);
 }
 
 void sentidoHorario() {

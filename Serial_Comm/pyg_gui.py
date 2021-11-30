@@ -12,6 +12,10 @@ import sys
 import gi
 gi.require_version('Gtk', '3.0')
 
+# TODO: Take constants into a separate file.
+MAGNETOMETER = "Magnetometer"
+ACCELEROMETER = "Accelerometer"
+GYROSCOPE = "Gyroscope"
 
 class AppWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs) -> None:
@@ -50,7 +54,7 @@ class AppWindow(Gtk.ApplicationWindow):
         serial_port_label = Gtk.Label.new("MPU sensor to be read:")
         vbox.pack_start(serial_port_label, False, True, 0)
         # Combobox Serial Port
-        sensor_options = ["Aceleromenter", "Gyroscope", "Magnetometer"] # MPU options
+        sensor_options = [ACCELEROMETER, GYROSCOPE, MAGNETOMETER] # MPU options
         sensor_combobox = Gtk.ComboBoxText()
         sensor_combobox.set_entry_text_column(0)
         sensor_combobox.connect("changed", self.on_sensor_option_change)
@@ -276,7 +280,14 @@ class AppWindow(Gtk.ApplicationWindow):
         # Serial port reading when reading flag is true.
         if take_data:
             if time_value == 0:
-                print("X (mT) \t Y (mT)")
+                if self.current_sensor == MAGNETOMETER:
+                    print("X (mT) \t Y (mT) \t Magnetometer")
+                elif self.current_sensor == ACCELEROMETER:
+                    print("X (mss) \t Y (mss) \t Accelerometer")
+                elif self.current_sensor == GYROSCOPE:
+                    print("X (rad) \t Y (rad) \t Gyroscope")
+                else:
+                    print("X () \t Y ()")
             while not self.event.is_set():
                 # Stop when we get to the samples amount limit.
                 if count >= self.samples:
@@ -292,20 +303,26 @@ class AppWindow(Gtk.ApplicationWindow):
                     break
                     
                 try:
-                    # Read serial por and decode.
+                    # Read serial port and decode.
                     temp = str(self.micro_board.readline().decode('cp437'))
                     temp = temp.replace("\n", "")
                     mpu_reading = temp.split(",")
-
-                    # if self.current_sensor == "Magnetometer":
-                    # else:
-                    
-                    print(mpu_reading[7], mpu_reading[8])
-                    
-                    # Add to graph
-                    
-                    self.x = np.append(self.x, float(mpu_reading[7]))
-                    self.y = np.append(self.y, float(mpu_reading[8]))
+                    # Append reading into app graph vars
+                    if self.current_sensor == MAGNETOMETER:
+                        # XY Plane
+                        print(mpu_reading[6], mpu_reading[7])
+                        self.x = np.append(self.x, float(mpu_reading[6]))
+                        self.y = np.append(self.y, float(mpu_reading[7]))
+                    elif self.current_sensor == GYROSCOPE:
+                        # XY Plane
+                        print(mpu_reading[3], mpu_reading[4])
+                        self.x = np.append(self.x, float(mpu_reading[4]))
+                        self.y = np.append(self.y, float(mpu_reading[3]))
+                    elif self.current_sensor == ACCELEROMETER:
+                        # XY Plane
+                        print(mpu_reading[0], mpu_reading[1])
+                        self.x = np.append(self.x, float(mpu_reading[0]))
+                        self.y = np.append(self.y, float(mpu_reading[1]))
                 except Exception as e:
                     print("Cannot make reading. //", e)
                     pass
@@ -317,16 +334,18 @@ class AppWindow(Gtk.ApplicationWindow):
                 time_value += self.time_interval
 
             time.sleep(0.5)
-            
-            #self.draw(self.x, self.y)
-            if self.current_sensor == "Magnetometer":
+            # Draw reading after completed sampling.
+            if self.current_sensor == MAGNETOMETER:
                 self.draw_magnetometer(self.x, self.y)
-
+            elif self.current_sensor == ACCELEROMETER:
+                self.draw(self.x, self.y)
+            elif self.current_sensor == GYROSCOPE:
+                self.draw(self.x, self.y)
+            # Show buttons adter sampling is completed
             self.start_button.show()
             self.save_button.show()
             self.stop_button.hide()
-
-            if self.current_sensor == "Magnetometer":
+            if self.current_sensor == MAGNETOMETER:
                 self.calibrate_button.show()
             else:
                 self.calibrate_button.hide()
