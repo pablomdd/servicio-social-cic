@@ -2,19 +2,6 @@ from pyfirmata import Arduino, OUTPUT, util
 import time
 
 PORT = "/dev/ttyACM0" 
-
-
-""" tablaPasos = [ 
-    int("0b1000", 2), 
-    int("0b1100", 2), 
-    int("0b0100", 2), 
-    int("0b0110", 2), 
-    int("0b0010", 2), 
-    int("0b0011", 2), 
-    int("0b0001", 2), 
-    int("0b1001", 2)
-] """
-
 tablaPasos = [ 
     "1000", 
     "1100", 
@@ -45,19 +32,18 @@ if __name__ == '__main__':
 
     # Velocidad de Motor: max 800 - min 1000 o mas
     velocidadMotor = 1200 / 1000000 # microseg a segundos
-    contadorPasos = 0
     pasosPorVuelta = 4076
     cantidadPasos = 8
+    contadorPasos = 0
 
     def escribirSalidas(paso: int):
-        print(tablaPasos[paso])
         pinMotor1.write(int(tablaPasos[paso][0]))
         pinMotor2.write(int(tablaPasos[paso][1]))
         pinMotor3.write(int(tablaPasos[paso][2]))
         pinMotor4.write(int(tablaPasos[paso][3]))
 
-    def sentidoHorario(contadorPasos: int):
-        # print(contadorPasos)
+    def sentidoHorario():
+        print(contadorPasos)
         contadorPasos += 1
         if contadorPasos >= cantidadPasos:
             contadorPasos = 0
@@ -65,10 +51,14 @@ if __name__ == '__main__':
 
     # lOOP
     while True:
-        time.sleep(1)
+        time.sleep(0.5)
         print("Vuelta")
-        for i in range(0, pasosPorVuelta + 100):
-            # sentidoHorario(contadorPasos)
-            escribirSalidas(i % 8)
+        for i in range(0, pasosPorVuelta):
+            escribirSalidas(cantidadPasos - 1 - i % cantidadPasos)
             time.sleep(velocidadMotor)
+        # Apagar bobinas
+        pinMotor1.write(0)
+        pinMotor2.write(0)
+        pinMotor3.write(0)
+        pinMotor4.write(0)
         time.sleep(0.5)
