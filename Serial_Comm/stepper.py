@@ -60,7 +60,7 @@ class StepperMotor():
         # Reading Lap
         time.sleep(0.25)
         print("Starting lap - Clockwise")
-        for i in range(0, self.steps_per_lap):
+        for i in range(0, self.steps_per_lap*2):
             motor_write(i % self.step_size)
             time.sleep(self.motor_speed)
         # Turn off coils
@@ -71,7 +71,7 @@ class StepperMotor():
         time.sleep(5)
         # Back to position lap
         print("Starting lap - Counter Clockwise")
-        for i in range(0, self.steps_per_lap):
+        for i in range(0, self.steps_per_lap + 100):
             motor_write(self.step_size - 1 - i % self.step_size)
             time.sleep(self.motor_speed)
         # Turn off coils
@@ -83,6 +83,6 @@ class StepperMotor():
         self.board.exit()
         print("Routine completed.")
 
-if __name__ == '__main__':
-    stepper = StepperMotor()
-    stepper.routine()
+# if __name__ == '__main__':
+#     stepper = StepperMotor()
+#     stepper.routine()
