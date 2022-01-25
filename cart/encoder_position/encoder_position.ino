@@ -1,5 +1,4 @@
-// Programa que lee el encoder de un motor DC y cuenta los pasos que da.
-
+// Programa que lee el encoder de un motor DC y calcula la posición con los pasos contados
 // Entrada de la señal A del encoder.
 const int C1 = 3;
 // Entrada de la señal B del encoder.
@@ -9,6 +8,9 @@ volatile byte ant = 0;
 volatile byte act = 0;
 unsigned long lastTime = 0;
 unsigned long sampleTime = 100;
+// Resolucion del encoder R = mH*s*r
+unsigned int R = 1980;
+double P = 0.0;
 
 void setup()
 {
@@ -18,17 +20,22 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
   attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
 
-  Serial.println("Numero de conteos");
+  Serial.println("Posicion en grados");
 }
 
 void loop()
 {
+  posValue();
+}
+
+void posValue(void)
+{
   if (millis() - lastTime >= sampleTime)
-  {
-    // Se actualiza cada sampleTime (milisegundos)
+  { // Se actualiza cada sampleTime (milisegundos)
     lastTime = millis();
-    Serial.print("Count: ");
-    Serial.println(n);
+    P = (n * 360.0) / R;
+    Serial.print("Posicion: ");
+    Serial.println(P);
   }
 }
 
