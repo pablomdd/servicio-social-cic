@@ -43,7 +43,7 @@ def getMagnetometerCalibrationValues(x, y):
 if __name__ == "__main__":
     x = np.array([])
     y = np.array([])
-    with open('data_reading_corrected2.csv', mode='r') as csv_file:
+    with open('data_reading_corrected.csv', mode='r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=",")
         line_count = 0
         for row in csv_reader:
