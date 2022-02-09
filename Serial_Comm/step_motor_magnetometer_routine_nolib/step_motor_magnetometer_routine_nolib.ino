@@ -42,11 +42,14 @@ void loop(){
     }
     // This delay helps the step motor to make the turn properly without getting stucked.
     delay(50);
+    /*
     for (int i = 0; i < pasosPorVuelta; i++) {
         sentidoAntihorario();
         delayMicroseconds(velocidadMotor);
-    }
-    delay(2500);
+    }}
+
+   */
+    delay(1000);
 }
 
 void sentidoHorario() {

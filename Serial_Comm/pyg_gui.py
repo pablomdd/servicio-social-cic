@@ -7,6 +7,8 @@ import numpy as np
 import time
 import threading
 import serial
+# from pyfirmata import Arduino, util
+from stepper import StepperMotor
 import glob
 import sys
 import gi
@@ -75,6 +77,10 @@ class AppWindow(Gtk.ApplicationWindow):
         self.save_button.connect("clicked", self.on_button_save)
         vbox.pack_start(self.save_button, False, False, 0)
         # Button Calibration
+        self.stepper_motor_button = Gtk.Button.new_with_label("Stepper Routine")
+        self.stepper_motor_button.connect("clicked", self.on_button_calibrate)
+        vbox.pack_start(self.stepper_motor_button, False, False, 0)
+        # Button Calibration
         self.calibrate_button = Gtk.Button.new_with_label("Calibrate")
         self.calibrate_button.connect("clicked", self.on_button_calibrate)
         vbox.pack_start(self.calibrate_button, False, False, 0)
@@ -89,7 +95,7 @@ class AppWindow(Gtk.ApplicationWindow):
         self.board_resolution = 1023
         self.samples = 0
         self.micro_board = None
-        self.time_interval = 0.025  # seconds (s)
+        self.time_interval = 0.050  # seconds (s)
         self.values = []
 
         # Example sine wave plot on init
@@ -232,10 +238,18 @@ class AppWindow(Gtk.ApplicationWindow):
 
     def on_button_start(self, widget):
         print("Start")
+        self.stepper_routine_thread = threading.Thread(target=self.stepper_routine)
+        self.stepper_routine_thread.daemon = True
         self.timer = threading.Thread(target=self.get_time)
         self.event = threading.Event()
         self.timer.daemon = True
+
+        self.stepper_routine_thread.start()
         self.timer.start()
+
+    def stepper_routine(self):
+        stepper = StepperMotor()
+        stepper.routine()
 
     """get_time()
     This method reads the serial port from the arduino. It stores data in a Numpy 
@@ -281,6 +295,8 @@ class AppWindow(Gtk.ApplicationWindow):
         if take_data:
             if time_value == 0:
                 if self.current_sensor == MAGNETOMETER:
+                    # stepper = StepperMotor()
+                    # stepper.routine()
                     print("X (mT) \t Y (mT) \t Magnetometer")
                 elif self.current_sensor == ACCELEROMETER:
                     print("X (mss) \t Y (mss) \t Accelerometer")
