@@ -105,7 +105,7 @@ void loop()
 
   // signal the motor
   setMotor(dir, pwr, ena, in1, in2);
-
+  
   // store previous error
   eprev = e;
 

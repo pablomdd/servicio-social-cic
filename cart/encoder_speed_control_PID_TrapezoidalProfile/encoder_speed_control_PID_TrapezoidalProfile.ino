@@ -60,11 +60,11 @@ void setup()
 
 void loop()
 {
-//  if (!timeout && target == 0){
-//      // Reset internal state
-//      trapezoidalProfile->init();
-//  }
-  
+  //  if (!timeout && target == 0){
+  //      // Reset internal state
+  //      trapezoidalProfile->init();
+  //  }
+
   if (!timeout) {
     //  if (stringComplete) {
     //    Cv = (double)inputString.toInt();
@@ -75,7 +75,7 @@ void loop()
     //  int target = R;
     //  int target = R * sin(prevT / 1e6);
 
-    float positionRef = 1000;
+    //    float positionRef = 1000;
     target = trapezoidalProfile->update(10 * R);
     float trapezoidalVel = trapezoidalProfile->getVelocity();
 
@@ -142,7 +142,7 @@ void loop()
   if (timeout) {
     if (millis() - lastTimeout >= 2000) {
       timeout = false;
-      
+
       //    Reset pulse count
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
       {
