@@ -12,8 +12,8 @@ SoftwareSerial ss(4, 3);
 
 void setup()
 {
+  // PC Monitor Serial Comm 
   Serial.begin(115200);
-  
   // IMPORTANT: Replace standard 4800baud to 9600baud
   ss.begin(9600);
   
