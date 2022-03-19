@@ -1,0 +1,12 @@
+{
+  "name": "js-websocket-server",
+  "version": "1.0.0",
+  "description": "- Driver: CP210x USB to UART Bridge Virtual COM Port https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "pablomdd",
+  "license": "MIT"
+}
