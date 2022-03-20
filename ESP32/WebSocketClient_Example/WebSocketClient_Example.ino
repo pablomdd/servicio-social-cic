@@ -22,7 +22,7 @@ WebSocketsClient webSocket;
 const char* ssid = "INFINITUME957";
 const char* password = "3672360107";
 // Local IP address
-const char* address = "192.168.56.1";
+const char* address = "192.168.1.92";
 const char* entryPoint = "/";
 const uint16_t port = 80;
 
