@@ -1,12 +1,14 @@
 import React from 'react';
 import { Box } from '@chakra-ui/react'
+import AppBar from './components/AppBar';
+import Controls from './components/Controls';
 
 function App() {
   return (
-    <Box w="100vw" h="100vh" bg="tomato">
-
+    <Box bg="tomato">
+      {/* <AppBar /> */}
+      <Controls />
     </Box>
   );
 }
-
 export default App;
