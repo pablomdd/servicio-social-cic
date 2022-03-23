@@ -1,9 +1,9 @@
 import React from 'react';
-import { useColorModeValue, useColorMode, Box, Link, chakra, Button, Flex, HStack, Spacer } from '@chakra-ui/react'
+import { useColorModeValue, useColorMode, Box, Link, chakra, Button, Flex, HStack, Spacer, Spinner } from '@chakra-ui/react'
 
 export default function AppBar() {
-    const bg = useColorModeValue("white", "gray.800");
-    const cl = useColorModeValue("gray.800", "white");
+    const bg = useColorModeValue("white", "gray.100");
+    const cl = useColorModeValue("gray.200", "white");
     const { toggleColorMode: toggleMode } = useColorMode();
     const text = useColorModeValue("dark", "light");
     // const SwitchIcon = useColorModeValue(FaMoon, FaSun);
@@ -35,6 +35,15 @@ export default function AppBar() {
                         </HStack>
                     </Box>
                     <Spacer />
+                    <Box>
+                        <Button
+                            isLoading={false}
+                            colorScheme='green'
+                            spinner={<Spinner size='md' />}
+                        >
+                            Conectar
+                        </Button>
+                    </Box>
                     <Box display="flex" alignItems="center">
                         {/* <IconButton
                 size="md"

@@ -5,8 +5,8 @@ import Controls from './components/Controls';
 
 function App() {
   return (
-    <Box bg="tomato">
-      {/* <AppBar /> */}
+    <Box bg="white">
+      <AppBar />
       <Controls />
     </Box>
   );
