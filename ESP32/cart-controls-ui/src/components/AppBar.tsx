@@ -1,7 +1,14 @@
 import React from 'react';
 import { useColorModeValue, useColorMode, Box, Link, chakra, Button, Flex, HStack, Spacer, Spinner, Input, InputGroup, InputLeftAddon } from '@chakra-ui/react'
 
-export default function AppBar() {
+type AppBarProps = {
+    boardIpAddress: string,
+    setBoardIpAddress: Function,
+    isConnected: boolean,
+    isConnecting: boolean,
+};
+
+export default function AppBar({ boardIpAddress, setBoardIpAddress, isConnected, isConnecting }: AppBarProps) {
     const bg = useColorModeValue("white", "gray.100");
     const cl = useColorModeValue("gray.200", "white");
     const { toggleColorMode: toggleMode } = useColorMode();
@@ -43,16 +50,25 @@ export default function AppBar() {
                                 placeholder='ip address'
                                 bg={"white"}
                                 color={"black"}
-                                defaultValue="192.65.1.92"
+                                defaultValue={boardIpAddress}
                             />
                         </InputGroup>
-                        <Button
-                            isLoading={false}
-                            colorScheme='green'
-                            spinner={<Spinner size='md' />}
-                        >
-                            Conectar
-                        </Button>
+                        {
+                            !isConnected ?
+                                <Button
+                                    isLoading={isConnecting}
+                                    colorScheme='green'
+                                    spinner={<Spinner size='md' />}
+                                >
+                                    Conectar
+                                </Button>
+                                :
+                                <Button
+                                    colorScheme='gray'
+                                >
+                                    Desconectar
+                                </Button>
+                        }
                     </HStack>
                     {/* <Box display="flex" alignItems="center">
                         <IconButton
