@@ -6,7 +6,32 @@ import Controls from './components/Controls';
 function App() {
   const [boardIpAddress, setBoardIpAddress] = useState("192.168.1.109");
   const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  // TODO: Add functionality
+  const wsConnect = () => {
+    setIsConnecting(true);
+    try {
+      // mock functionality connecting to ws server
+      setTimeout(() => {
+        console.log("conected");
+        setIsConnected(true);
+        setIsConnecting(false);
+      }, 1000);
+    } catch {
+      setIsConnecting(false);
+      setIsConnected(false);
+    }
+  }
+
+  // TODO: Add functionality
+  const wsDisconnect = () => {
+    if (isConnected) {
+      console.log("disconnected");
+      setIsConnected(false);
+    }
+  }
+
   return (
     <Box bg="white">
       <AppBar
@@ -14,6 +39,8 @@ function App() {
         setBoardIpAddress={setBoardIpAddress}
         isConnected={isConnected}
         isConnecting={isConnecting}
+        wsConnect={wsConnect}
+        wsDisconnect={wsDisconnect}
       />
       <Controls />
     </Box>
