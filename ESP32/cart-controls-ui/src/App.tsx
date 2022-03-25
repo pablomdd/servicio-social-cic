@@ -61,35 +61,39 @@ function App() {
   }
 
   return (
-    <Box bg="white">
-      <VStack color={"black"}>
-        <button
-          onClick={handleClickSendMessage}
-          disabled={readyState !== ReadyState.OPEN}
-        >
-          Click Me to send 'Hello'
-        </button>
-        <span>The WebSocket is currently {connectionStatus}</span>
-        {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
-        <ul>
-          {messageHistory.map((message, idx) => (
-            <span key={idx}>{message ? message.data : null}</span>
-          ))}
-        </ul>
-      </VStack>
-      <AppBar
-        boardIpAddress={boardIpAddress}
-        setBoardIpAddress={setBoardIpAddress}
-        isConnected={isConnected}
-        isConnecting={isConnecting}
-        wsConnect={wsConnect}
-        wsDisconnect={wsDisconnect}
-        connectionStatus={connectionStatus}
-      />
-      <Controls
-        wsSendMessage={wsSendMessage}
-      />
-    </Box>
+    <>
+      <Box bg="white">
+        <AppBar
+          boardIpAddress={boardIpAddress}
+          setBoardIpAddress={setBoardIpAddress}
+          isConnected={isConnected}
+          isConnecting={isConnecting}
+          wsConnect={wsConnect}
+          wsDisconnect={wsDisconnect}
+          connectionStatus={connectionStatus}
+        />
+        <Controls
+          wsSendMessage={wsSendMessage}
+        />
+      </Box>
+      <footer>
+        <VStack color={"black"}>
+          <button
+            onClick={handleClickSendMessage}
+            disabled={readyState !== ReadyState.OPEN}
+          >
+            Click Me to send 'Hello'
+          </button>
+          <span>The WebSocket is currently {connectionStatus}</span>
+          {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
+          <ul>
+            {messageHistory.map((message, idx) => (
+              <span key={idx}>{message ? message.data : null}</span>
+            ))}
+          </ul>
+        </VStack>
+      </footer>
+    </>
   );
 }
 export default App;
