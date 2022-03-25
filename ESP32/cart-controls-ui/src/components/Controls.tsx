@@ -1,10 +1,15 @@
 import React from 'react';
 import { useColorModeValue, useColorMode, Center, Box, SimpleGrid, Kbd, Button } from '@chakra-ui/react'
 
-export default function Controls() {
+type ControlsProps = {
+    wsSendMessage: Function,
+};
+
+export default function Controls({ wsSendMessage, }: ControlsProps) {
 
     const onDirectionKey = (direction: string) => {
-        console.log(direction)
+        console.log(direction);
+        wsSendMessage(direction);
     }
 
     return (

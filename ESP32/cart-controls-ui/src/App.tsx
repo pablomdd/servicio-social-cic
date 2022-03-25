@@ -56,6 +56,10 @@ function App() {
     // }
   }
 
+  const wsSendMessage = (message: string) => {
+    sendMessage(message);
+  }
+
   return (
     <Box bg="white">
       <VStack color={"black"}>
@@ -82,7 +86,9 @@ function App() {
         wsDisconnect={wsDisconnect}
         connectionStatus={connectionStatus}
       />
-      <Controls />
+      <Controls
+        wsSendMessage={wsSendMessage}
+      />
     </Box>
   );
 }
