@@ -77,7 +77,7 @@ function App() {
         />
       </Box>
       <footer>
-        <VStack color={"black"}>
+        <VStack p="1em" color={"black"}>
           <button
             onClick={handleClickSendMessage}
             disabled={readyState !== ReadyState.OPEN}

@@ -13,21 +13,19 @@ export default function Controls({ wsSendMessage, }: ControlsProps) {
     }
 
     return (
-
-        <SimpleGrid h="100vh" w="100vw" p={{ base: "10%", lg: "15%" }} columns={3} spacing={10} >
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("up")}>
+        <SimpleGrid p={{ base: "10%", lg: "12%" }} columns={3} spacing={10} >
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("UP")}>
                 <Kbd fontSize={"2em"}>⬆</Kbd>
             </Button>
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("lf")}>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("LF")}>
                 <Kbd fontSize={"2em"}>⬅</Kbd>
             </Button>
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("rg")}>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("RG")}>
                 <Kbd fontSize={"2em"}>➡</Kbd>
             </Button>
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("dw")}>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("DW")}>
                 <Kbd fontSize={"2em"}>⬇</Kbd>
             </Button>
         </SimpleGrid>
-
     )
 }
