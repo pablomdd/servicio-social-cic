@@ -43,11 +43,6 @@ export default function AppBar({
         setBoardIpAddress(`ws://${url}`);
     }
 
-    const onDisconnectClick = () => {
-        // setBoardIpAddress("");
-        wsDisconnect();
-    }
-
     return (
         <React.Fragment>
             <chakra.header bg={bg} px={{ base: 2, sm: 4 }} py={4} shadow="lg">
@@ -71,7 +66,9 @@ export default function AppBar({
                     </Box>
                     {/* <Spacer /> */}
                     <HStack color={"black"}>
-                        {connectionStatus === 'Connecting' || connectionStatus === 'Closed' ?
+                        {connectionStatus === 'Connecting'
+                            || connectionStatus === 'Closed'
+                            || connectionStatus === 'Uninstantiated' ?
                             <InputGroup >
                                 <InputLeftAddon children='ws://' bg={"white"} color={"black"} border="1px" />
                                 <Input
@@ -91,9 +88,11 @@ export default function AppBar({
                             <chakra.p mr="1em" color={"green.600"}>🟢Conectado a {boardIpAddress}</chakra.p>
                             : null
                         }
-                        {connectionStatus === 'Connecting' || connectionStatus === 'Closed' ?
+                        {connectionStatus === 'Connecting'
+                            || connectionStatus === 'Closed'
+                            || connectionStatus === 'Uninstantiated' ?
                             <Button
-                                isLoading={isConnecting}
+                                isLoading={connectionStatus === 'Connecting'}
                                 colorScheme='green'
                                 spinner={<Spinner size='md' />}
                                 onClick={() => onConnectClick()}

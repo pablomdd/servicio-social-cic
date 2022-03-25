@@ -5,7 +5,7 @@ import AppBar from './components/AppBar';
 import Controls from './components/Controls';
 
 function App() {
-  const [boardIpAddress, setBoardIpAddress] = useState<string | null>("");
+  const [boardIpAddress, setBoardIpAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
