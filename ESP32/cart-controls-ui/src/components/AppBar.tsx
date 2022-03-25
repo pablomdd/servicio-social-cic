@@ -8,6 +8,7 @@ type AppBarProps = {
     isConnecting: boolean,
     wsConnect: Function,
     wsDisconnect: Function,
+    connectionStatus: string,
 };
 
 export default function AppBar({
@@ -16,7 +17,8 @@ export default function AppBar({
     isConnected,
     isConnecting,
     wsConnect,
-    wsDisconnect
+    wsDisconnect,
+    connectionStatus,
 }: AppBarProps) {
     const bg = useColorModeValue("white", "gray.300");
     const cl = useColorModeValue("gray.200", "white");
@@ -29,9 +31,18 @@ export default function AppBar({
     const dcl = useColorModeValue("gray.500", "gray.50");
     const hbgh = useColorModeValue("gray.100", "brand.500");
 
+    const [url, setUrl] = React.useState("192.168.1.109");
+
     const onInputChange: React.ChangeEventHandler = (e: any) => {
-        setBoardIpAddress(e.target.value);
+        console.log("setting url:", e.target.value)
+        setUrl(e.target.value);
     }
+
+    // Changes boardIpAddress. This triggers reconnecting the ws client.
+    const onConnectClick = () => {
+        setBoardIpAddress(`ws://${url}`)
+    }
+
     return (
         <React.Fragment>
             <chakra.header bg={bg} px={{ base: 2, sm: 4 }} py={4} shadow="lg">
@@ -55,40 +66,47 @@ export default function AppBar({
                     </Box>
                     {/* <Spacer /> */}
                     <HStack color={"black"}>
-                        {
-                            !isConnected ?
-                                <InputGroup >
-                                    <InputLeftAddon children='ws://' bg={"white"} color={"black"} border="1px" />
-                                    <Input
-                                        placeholder='ip address'
-                                        bg={"white"}
-                                        color={"black"}
-                                        defaultValue={boardIpAddress}
-                                        value={boardIpAddress}
-                                        onChange={onInputChange}
-                                    />
-                                </InputGroup>
-                                :
-                                <chakra.p mr="1em" color={"green.600"}>🟢Conectado a {boardIpAddress}</chakra.p>
+                        {connectionStatus === 'Connecting' ?
+                            <InputGroup >
+                                <InputLeftAddon children='ws://' bg={"white"} color={"black"} border="1px" />
+                                <Input
+                                    placeholder='ip address'
+                                    bg={"white"}
+                                    color={"black"}
+                                    defaultValue={"192.168.1.109"}
+                                    value={url}
+                                    onChange={onInputChange}
+                                />
+                            </InputGroup>
+                            :
+                            null
                         }
-                        {
-                            !isConnected ?
-                                <Button
-                                    isLoading={isConnecting}
-                                    colorScheme='green'
-                                    spinner={<Spinner size='md' />}
-                                    onClick={() => wsConnect()}
-                                >
-                                    Conectar
-                                </Button>
-                                :
-                                <Button
-                                    colorScheme='blue'
-                                    variant={"solid"}
-                                    onClick={() => wsDisconnect()}
-                                >
-                                    Desconectar
-                                </Button>
+                        {connectionStatus === 'Open' ?
+
+                            <chakra.p mr="1em" color={"green.600"}>🟢Conectado a {boardIpAddress}</chakra.p>
+                            : null
+                        }
+                        {connectionStatus === 'Connecting' ?
+                            <Button
+                                isLoading={isConnecting}
+                                colorScheme='green'
+                                spinner={<Spinner size='md' />}
+                                onClick={() => onConnectClick()}
+                            >
+                                Conectar
+                            </Button>
+                            :
+                            null
+                        }
+                        {connectionStatus === 'Open' ?
+                            <Button
+                                colorScheme='blue'
+                                variant={"solid"}
+                                onClick={() => wsDisconnect()}
+                            >
+                                Desconectar
+                            </Button>
+                            : null
                         }
                     </HStack>
                     {/* <Box display="flex" alignItems="center">
