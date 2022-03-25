@@ -2,7 +2,7 @@ import React from 'react';
 import { useColorModeValue, useColorMode, Box, Link, chakra, Button, Flex, HStack, Spacer, Spinner, Input, InputGroup, InputLeftAddon } from '@chakra-ui/react'
 
 type AppBarProps = {
-    boardIpAddress: string,
+    boardIpAddress: string | null,
     setBoardIpAddress: Function,
     isConnected: boolean,
     isConnecting: boolean,
@@ -44,7 +44,8 @@ export default function AppBar({
     }
 
     const onDisconnectClick = () => {
-        setBoardIpAddress("");
+        // setBoardIpAddress("");
+        wsDisconnect();
     }
 
     return (
@@ -70,7 +71,7 @@ export default function AppBar({
                     </Box>
                     {/* <Spacer /> */}
                     <HStack color={"black"}>
-                        {connectionStatus === 'Connecting' ?
+                        {connectionStatus === 'Connecting' || connectionStatus === 'Closed' ?
                             <InputGroup >
                                 <InputLeftAddon children='ws://' bg={"white"} color={"black"} border="1px" />
                                 <Input
@@ -90,7 +91,7 @@ export default function AppBar({
                             <chakra.p mr="1em" color={"green.600"}>🟢Conectado a {boardIpAddress}</chakra.p>
                             : null
                         }
-                        {connectionStatus === 'Connecting' ?
+                        {connectionStatus === 'Connecting' || connectionStatus === 'Closed' ?
                             <Button
                                 isLoading={isConnecting}
                                 colorScheme='green'
@@ -102,7 +103,7 @@ export default function AppBar({
                             :
                             null
                         }
-                        {/* {connectionStatus === 'Open' ?
+                        {connectionStatus === 'Open' ?
                             <Button
                                 colorScheme='blue'
                                 variant={"solid"}
@@ -111,7 +112,7 @@ export default function AppBar({
                                 Desconectar
                             </Button>
                             : null
-                        } */}
+                        }
                     </HStack>
                     {/* <Box display="flex" alignItems="center">
                         <IconButton

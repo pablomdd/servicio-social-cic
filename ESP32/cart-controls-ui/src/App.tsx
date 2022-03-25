@@ -5,7 +5,7 @@ import AppBar from './components/AppBar';
 import Controls from './components/Controls';
 
 function App() {
-  const [boardIpAddress, setBoardIpAddress] = useState("");
+  const [boardIpAddress, setBoardIpAddress] = useState<string | null>("");
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -49,7 +49,7 @@ function App() {
 
   // TODO: Add functionality
   const wsDisconnect = () => {
-    resetGlobalState("");
+    setBoardIpAddress(null);
     // if (isConnected) {
     //   console.log("disconnected");
     //   setIsConnected(false);
