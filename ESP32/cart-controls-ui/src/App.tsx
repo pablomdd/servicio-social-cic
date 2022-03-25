@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import useWebSocket, { ReadyState, resetGlobalState } from 'react-use-websocket';
 import { Box, VStack } from '@chakra-ui/react'
 import AppBar from './components/AppBar';
 import Controls from './components/Controls';
@@ -30,6 +30,7 @@ function App() {
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
 
+  // TODO: Clean unused functionality and state vars
   // TODO: Add functionality
   const wsConnect = () => {
     setIsConnecting(true);
@@ -48,10 +49,11 @@ function App() {
 
   // TODO: Add functionality
   const wsDisconnect = () => {
-    if (isConnected) {
-      console.log("disconnected");
-      setIsConnected(false);
-    }
+    resetGlobalState("");
+    // if (isConnected) {
+    //   console.log("disconnected");
+    //   setIsConnected(false);
+    // }
   }
 
   return (

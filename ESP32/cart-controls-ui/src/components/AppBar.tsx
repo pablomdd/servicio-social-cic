@@ -40,7 +40,11 @@ export default function AppBar({
 
     // Changes boardIpAddress. This triggers reconnecting the ws client.
     const onConnectClick = () => {
-        setBoardIpAddress(`ws://${url}`)
+        setBoardIpAddress(`ws://${url}`);
+    }
+
+    const onDisconnectClick = () => {
+        setBoardIpAddress("");
     }
 
     return (
@@ -98,7 +102,7 @@ export default function AppBar({
                             :
                             null
                         }
-                        {connectionStatus === 'Open' ?
+                        {/* {connectionStatus === 'Open' ?
                             <Button
                                 colorScheme='blue'
                                 variant={"solid"}
@@ -107,7 +111,7 @@ export default function AppBar({
                                 Desconectar
                             </Button>
                             : null
-                        }
+                        } */}
                     </HStack>
                     {/* <Box display="flex" alignItems="center">
                         <IconButton
