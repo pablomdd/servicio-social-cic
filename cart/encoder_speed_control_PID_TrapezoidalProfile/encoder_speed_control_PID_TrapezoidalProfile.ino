@@ -60,11 +60,8 @@ void setup()
 
 void loop()
 {
-  //  if (!timeout && target == 0){
-  //      // Reset internal state
-  //      trapezoidalProfile->init();
-  //  }
-
+  // If the trapezoidal profile is completed then we set a timeout.
+  // Once the timeout is completed we reset control vars
   if (!timeout) {
     //  if (stringComplete) {
     //    Cv = (double)inputString.toInt();
