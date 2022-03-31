@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
 #include <MotionGenerator.h>
-#include <util/atomic.h>
+// #include <util/atomic.h>
 
 // Constants
 // Wifi access
@@ -15,15 +15,23 @@ String inputString = "";
 bool stringComplete = false;
 
 // TODO: change arduino UNO input declaration to suitable ESP32 pins 
+// - [x]: Motor driver and pwm (in1, in2, ena)
+// - [ ]: Encoder Interrupts
+// - [ ]: Enocder function (port D reading)
 
 // Entrada de la señal A del encoder (Cable amarillo).
 const byte C1 = 3;
 // Entrada de la señal B del encoder (Cable verde).
 const byte C2 = 2;
-//  Motor DC
-const byte in1 = 6;
-const byte in2 = 7;
-const byte ena = 10;
+//  Motor DC 1
+const int in1 = 27;
+const int in2 = 26;
+const int ena = 14;
+// PWM config
+const int freq = 30000;
+const int pwmChannel = 0;
+const int resolution = 8;
+int dutyCycle = 200;
 // Pulsos
 volatile int n = 0;
 volatile byte ant = 0;
@@ -112,21 +120,29 @@ void setup() {
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
 
-  pinMode(C1, INPUT);
-  pinMode(C2, INPUT);
+  // Motor control and direction
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
   pinMode(ena, OUTPUT);
   digitalWrite(in1, false);
   digitalWrite(in2, false);
   analogWrite(ena, Cv);
-
-  attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
-
+  // configure LED PWM utility for writing PWM
+  ledcSetup(pwmChannel, freq, resolution);
+  // attach the channel to the GPIO to be controlled
+  ledcAttachPin(ena, pwmChannel);
+  // TODO: Change to match ESP32
+  /*
+    // Motor Encoder
+    pinMode(C1, INPUT);
+    pinMode(C2, INPUT);
+    // Encoder interrupt
+    attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
+  */
   Serial.println("Target Pos Profile -u");
 }
-
+/*
 void loop() {
   // Look for and handle WebSocket data
   webSocket.loop();
@@ -160,9 +176,8 @@ void loop() {
     {
       pos = n;
     }
-    // error
+    // Control error
     int e = pos - target;
-
     // derivative
     float dedt = (e - eprev) / (deltaT);
     // integral
@@ -231,11 +246,54 @@ void loop() {
   }
   //  computeRpm();
 }
+*/
+
+void loop() {
+  // Move the DC motor forward at maximum speed
+  Serial.println("Moving Forward");
+  // digitalWrite(motor1Pin1, LOW);
+  // digitalWrite(motor1Pin2, HIGH); 
+  setMotor(1, 255, ena, in1, in2);
+  delay(2000);
+
+  // Stop the DC motor
+  Serial.println("Motor stopped");
+  setMotor(0, 0, ena, in1, in2);
+  delay(1000);
+
+  // Move DC motor backwards at maximum speed
+  Serial.println("Moving Backwards");
+  setMotor(-1, 255, ena, in1, in2);
+  delay(2000);
+
+  // Stop the DC motor
+  Serial.println("Motor stopped");
+  setMotor(0, 0, ena, in1, in2);
+  delay(1000);
+
+  // Move DC motor forward with increasing speed
+  while (dutyCycle <= 255){
+    // ledcWrite(pwmChannel, dutyCycle);  
+    setMotor(1, dutyCycle, ena, in1, in2);
+    Serial.print("Forward with duty cycle: ");
+    Serial.println(dutyCycle);
+    dutyCycle = dutyCycle + 5;
+    delay(500);
+  }
+  dutyCycle = 200;
+}
 
 
+/* TODO: Change pwm to pwmChannel
+** Note: pwmChannel and pwm are not the same but in this context are equivalent. 
+** They're the one who tell us who we are echoing the pwmVal
+*/
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2)
 {
-  analogWrite(ena, pwmVal);
+  
+  // analogWrite(pwm, pwmVal);
+  // PWM template: ledcWrite(pwmChannel, dutyCycle);
+  ledcWrite(pwmChannel, pwmVal);
   if (dir == 1)
   {
     digitalWrite(in1, HIGH);
@@ -286,6 +344,7 @@ void computeRpm(void)
 }
 
 // Encoder precisión cuádruple.
+
 void encoder(void)
 {
   ant = act;
@@ -299,7 +358,7 @@ void encoder(void)
     so posible values for the port are 0000=0, 0100=4, 1000=8, 11000=12
     thus, be bellow numeric comparisons
   */
-  act = PIND & 12;
+  // act = PIND & 12;
 
   if (ant == 0 && act == 4)
     n++;
