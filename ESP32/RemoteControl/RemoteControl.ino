@@ -346,11 +346,6 @@ void computeRpm(void)
 
 void encoder(void)
 {
-  /*
-  n++;
-  Serial.println("pulso");
-  Serial.println(n);
-  */
   // TODO: Change reading from the D port. 
   /*
    Maybe just reading from the declared encoder inputs.
