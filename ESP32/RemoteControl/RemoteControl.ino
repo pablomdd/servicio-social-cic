@@ -20,9 +20,9 @@ bool stringComplete = false;
 // - [ ]: Enocder function (port D reading)
 
 // Entrada de la señal A del encoder (Cable amarillo).
-const byte C1 = 3;
+const byte C1 = 34;
 // Entrada de la señal B del encoder (Cable verde).
-const byte C2 = 2;
+const byte C2 = 35;
 //  Motor DC 1
 const int in1 = 27;
 const int in2 = 26;
@@ -131,15 +131,14 @@ void setup() {
   ledcSetup(pwmChannel, freq, resolution);
   // attach the channel to the GPIO to be controlled
   ledcAttachPin(ena, pwmChannel);
-  // TODO: Change to match ESP32
-  /*
-    // Motor Encoder
-    pinMode(C1, INPUT);
-    pinMode(C2, INPUT);
-    // Encoder interrupt
-    attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
-  */
+    
+  // Motor Encoder
+  pinMode(C1, INPUT);
+  pinMode(C2, INPUT);
+  // Encoder interrupt
+  attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
+
   Serial.println("Target Pos Profile -u");
 }
 /*
@@ -347,9 +346,13 @@ void computeRpm(void)
 
 void encoder(void)
 {
-  ant = act;
+  /*
+  n++;
+  Serial.println("pulso");
+  Serial.println(n);
+  */
   // TODO: Change reading from the D port. 
-  /* 
+  /*
    Maybe just reading from the declared encoder inputs.
    
    Remember the PIND & 12 operation reads the entire port D and 
@@ -357,8 +360,11 @@ void encoder(void)
    eg: portD: MSB-> xxxxbbxx & 12=00001100 
     so posible values for the port are 0000=0, 0100=4, 1000=8, 11000=12
     thus, be bellow numeric comparisons
-  */
-  // act = PIND & 12;
+   */
+  ant = act;
+  const byte enc1 = digitalRead(C1); 
+  const byte enc2 = digitalRead(C1);
+  act = (((enc1 << 1) | enc2) << 2) & 12;
 
   if (ant == 0 && act == 4)
     n++;
@@ -377,4 +383,5 @@ void encoder(void)
     n--;
   if (ant == 12 && act == 4)
     n--;
+  Serial.println(n);
 }
