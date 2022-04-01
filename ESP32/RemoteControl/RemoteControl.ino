@@ -29,7 +29,7 @@ const int in2 = 26;
 const int ena = 14;
 // PWM config
 const int freq = 30000;
-const int pwmChannel = 0;
+const int m1PwmChannel = 0;
 const int resolution = 8;
 int dutyCycle = 200;
 // Pulsos
@@ -128,18 +128,20 @@ void setup() {
   digitalWrite(in2, false);
   analogWrite(ena, Cv);
   // configure LED PWM utility for writing PWM
-  ledcSetup(pwmChannel, freq, resolution);
+  ledcSetup(m1PwmChannel, freq, resolution);
   // attach the channel to the GPIO to be controlled
-  ledcAttachPin(ena, pwmChannel);
-    
+  ledcAttachPin(ena, m1PwmChannel);
+
+  /*  
   // Motor Encoder
   pinMode(C1, INPUT);
   pinMode(C2, INPUT);
   // Encoder interrupt
-  attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
-  //attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(C1), encoder, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(C2), encoder, CHANGE);
 
   Serial.println("Target Pos Profile -u");
+  */
 }
 /*
 void loop() {
@@ -247,32 +249,33 @@ void loop() {
 }
 */
 
+//Demo routine for motors
 void loop() {
   // Move the DC motor forward at maximum speed
   Serial.println("Moving Forward");
   // digitalWrite(motor1Pin1, LOW);
   // digitalWrite(motor1Pin2, HIGH); 
-  setMotor(1, 255, ena, in1, in2);
+  setMotor(1, 255, m1PwmChannel, in1, in2);
   delay(2000);
 
   // Stop the DC motor
   Serial.println("Motor stopped");
-  setMotor(0, 0, ena, in1, in2);
+  setMotor(0, 0, m1PwmChannel, in1, in2);
   delay(1000);
 
   // Move DC motor backwards at maximum speed
   Serial.println("Moving Backwards");
-  setMotor(-1, 255, ena, in1, in2);
+  setMotor(-1, 255, m1PwmChannel, in1, in2);
   delay(2000);
 
   // Stop the DC motor
   Serial.println("Motor stopped");
-  setMotor(0, 0, ena, in1, in2);
+  setMotor(0, 0, m1PwmChannel, in1, in2);
   delay(1000);
 
   // Move DC motor forward with increasing speed
   while (dutyCycle <= 255){
-    // ledcWrite(pwmChannel, dutyCycle);  
+    // ledcWrite(m1PwmChannel, dutyCycle);  
     setMotor(1, dutyCycle, ena, in1, in2);
     Serial.print("Forward with duty cycle: ");
     Serial.println(dutyCycle);
@@ -287,7 +290,7 @@ void loop() {
 ** Note: pwmChannel and pwm are not the same but in this context are equivalent. 
 ** They're the one who tell us who we are echoing the pwmVal
 */
-void setMotor(int dir, int pwmVal, int pwm, int in1, int in2)
+void setMotor(int dir, int pwmVal, int pwmChannel, int in1, int in2)
 {
   
   // analogWrite(pwm, pwmVal);
@@ -343,7 +346,6 @@ void computeRpm(void)
 }
 
 // Encoder precisión cuádruple.
-
 void encoder(void)
 {
   // TODO: Change reading from the D port. 
@@ -356,27 +358,28 @@ void encoder(void)
     so posible values for the port are 0000=0, 0100=4, 1000=8, 11000=12
     thus, be bellow numeric comparisons
    */
-  ant = act;
-  const byte enc1 = digitalRead(C1); 
-  const byte enc2 = digitalRead(C1);
-  act = (((enc1 << 1) | enc2) << 2) & 12;
-
-  if (ant == 0 && act == 4)
-    n++;
-  if (ant == 4 && act == 12)
-    n++;
-  if (ant == 8 && act == 0)
-    n++;
-  if (ant == 12 && act == 8)
-    n++;
-
-  if (ant == 0 && act == 8)
-    n--;
-  if (ant == 4 && act == 0)
-    n--;
-  if (ant == 8 && act == 12)
-    n--;
-  if (ant == 12 && act == 4)
-    n--;
+//  ant = act;
+//  const byte enc1 = digitalRead(C1); 
+//  const byte enc2 = digitalRead(C1);
+//  act = (((enc1 << 1) | enc2) << 2) & 12;
+//
+//  if (ant == 0 && act == 4)
+//    n++;
+//  if (ant == 4 && act == 12)
+//    n++;
+//  if (ant == 8 && act == 0)
+//    n++;
+//  if (ant == 12 && act == 8)
+//    n++;
+//
+//  if (ant == 0 && act == 8)
+//    n--;
+//  if (ant == 4 && act == 0)
+//    n--;
+//  if (ant == 8 && act == 12)
+//    n--;
+//  if (ant == 12 && act == 4)
+//    n--;
+  n++;
   Serial.println(n);
 }
