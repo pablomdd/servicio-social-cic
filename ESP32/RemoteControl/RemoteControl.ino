@@ -18,6 +18,7 @@ bool stringComplete = false;
 // - [x]: Motor driver and pwm (in1, in2, ena)
 // - [ ]: Encoder Interrupts
 // - [ ]: Enocder function (port D reading)
+// - [x]: Receive Websocket messages and take action 
 
 // Entrada de la señal A del encoder (Cable amarillo).
 const byte C1 = 34;
@@ -64,42 +65,11 @@ int target = 0;
 bool timeout = false;
 unsigned long lastTimeout = 0;
 
-bool newAction = false;
-String action = "";
 
 void setAction(uint8_t * payload) {
+  // TODO (Nit): It seems it's not a good idea to use a String due to performarce. 
   String payloadStr = (char*)payload;
-/*  
-  switch (payloadStr)
-  {
-  // Forwards
-  case "FW":
-    setMotor(1, 255, m1PwmChannel, in1, in2);
-    setMotor(1, 255, m2PwmChannel, in3, in4);
-    break;
-  // Backwards
-  case "BC":
-    setMotor(-1, 255, m1PwmChannel, in1, in2);
-    setMotor(-1, 255, m2PwmChannel, in3, in4);
-    break;
-  // LEFT
-  case "LF":
-    setMotor(1, 200, m1PwmChannel, in1, in2);
-    setMotor(1, 100, m2PwmChannel, in3, in4);
-    break;
-  // RIGHT
-  case "RG":
-    setMotor(1, 100, m1PwmChannel, in1, in2);
-    setMotor(1, 200, m2PwmChannel, in3, in4);
-    break;
-  // STOP
-  case "ST": 
-  default:
-    setMotor(0, 0, m1PwmChannel, in1, in2);
-    setMotor(0, 0, m2PwmChannel, in3, in4);
-    break;
-  }
-*/
+
   if (payloadStr == "FW"){
     setMotor(1, 255, m1PwmChannel, in1, in2);
     setMotor(1, 255, m2PwmChannel, in3, in4);
@@ -219,53 +189,8 @@ void loop() {
 }
 
 
-//Demo routine for motors
-// void loop() {
-//   // Move the DC motor forward at maximum speed
-//   Serial.println("Moving Forward");
-//   // digitalWrite(motor1Pin1, LOW);
-//   // digitalWrite(motor1Pin2, HIGH); 
-//   setMotor(1, 255, m1PwmChannel, in1, in2);
-//   setMotor(1, 255, m2PwmChannel, in3, in4);
-//   delay(2000);
-
-//   // Stop the DC motor
-//   Serial.println("Motor stopped");
-//   setMotor(0, 0, m1PwmChannel, in1, in2);
-//   setMotor(0, 0, m2PwmChannel, in3, in4);
-//   delay(1000);
-
-//   // Move DC motor backwards at maximum speed
-//   Serial.println("Moving Backwards");
-//   setMotor(-1, 255, m1PwmChannel, in1, in2);
-//   setMotor(-1, 255, m2PwmChannel, in3, in4);
-//   delay(2000);
-
-//   // Stop the DC motor
-//   Serial.println("Motor stopped");
-//   setMotor(0, 0, m1PwmChannel, in1, in2);
-//   setMotor(0, 0, m2PwmChannel, in3, in4);
-//   delay(1000);
-
-//   // Move DC motor forward with increasing speed
-//   while (dutyCycle <= 255){
-//     // ledcWrite(m1PwmChannel, dutyCycle);  
-//     setMotor(1, dutyCycle, m1PwmChannel, in1, in2);
-//     setMotor(1, dutyCycle, m2PwmChannel, in3, in4);
-//     Serial.print("Forward with duty cycle: ");
-//     Serial.println(dutyCycle);
-//     dutyCycle = dutyCycle + 5;
-//     delay(500);
-//   }
-//   dutyCycle = 200;
-// }
-
-
 void setMotor(int dir, int pwmVal, int pwmChannel, int in1, int in2)
 {
-  
-  // analogWrite(pwm, pwmVal);
-  // PWM template: ledcWrite(pwmChannel, dutyCycle);
   ledcWrite(pwmChannel, pwmVal);
   if (dir == 1)
   {
