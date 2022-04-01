@@ -14,7 +14,7 @@ export default function Controls({ wsSendMessage, }: ControlsProps) {
 
     return (
         <SimpleGrid p={{ base: "10%", lg: "12%" }} columns={3} spacing={10} >
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("UP")}>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("FW")}>
                 <Kbd fontSize={"2em"}>⬆</Kbd>
             </Button>
             <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("LF")}>
@@ -23,8 +23,11 @@ export default function Controls({ wsSendMessage, }: ControlsProps) {
             <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("RG")}>
                 <Kbd fontSize={"2em"}>➡</Kbd>
             </Button>
-            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("DW")}>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("BC")}>
                 <Kbd fontSize={"2em"}>⬇</Kbd>
+            </Button>
+            <Button colorScheme='blue' height='80px' onClick={() => onDirectionKey("ST")}>
+                <Kbd fontSize={"2em"}>STOP</Kbd>
             </Button>
         </SimpleGrid>
     )
