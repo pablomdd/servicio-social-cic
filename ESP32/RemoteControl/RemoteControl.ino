@@ -27,9 +27,14 @@ const byte C2 = 35;
 const int in1 = 27;
 const int in2 = 26;
 const int ena = 14;
+const int m1PwmChannel = 0;
+//  Motor DC 2
+const int in3 = 5;
+const int in4 = 17;
+const int enb = 16;
+const int m2PwmChannel = 1;
 // PWM config
 const int freq = 30000;
-const int m1PwmChannel = 0;
 const int resolution = 8;
 int dutyCycle = 200;
 // Pulsos
@@ -120,7 +125,7 @@ void setup() {
   webSocket.begin();
   webSocket.onEvent(onWebSocketEvent);
 
-  // Motor control and direction
+  // Motor 1 config
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
   pinMode(ena, OUTPUT);
@@ -131,6 +136,15 @@ void setup() {
   ledcSetup(m1PwmChannel, freq, resolution);
   // attach the channel to the GPIO to be controlled
   ledcAttachPin(ena, m1PwmChannel);
+  // Motor 2 config
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+  pinMode(enb, OUTPUT);
+  digitalWrite(in3, false);
+  digitalWrite(in4, false);
+  analogWrite(enb, Cv);
+  ledcSetup(m1PwmChannel, freq, resolution);
+  ledcAttachPin(enb, m2PwmChannel);
 
   /*  
   // Motor Encoder
@@ -256,27 +270,32 @@ void loop() {
   // digitalWrite(motor1Pin1, LOW);
   // digitalWrite(motor1Pin2, HIGH); 
   setMotor(1, 255, m1PwmChannel, in1, in2);
+  setMotor(1, 255, m2PwmChannel, in3, in4);
   delay(2000);
 
   // Stop the DC motor
   Serial.println("Motor stopped");
   setMotor(0, 0, m1PwmChannel, in1, in2);
+  setMotor(0, 0, m2PwmChannel, in3, in4);
   delay(1000);
 
   // Move DC motor backwards at maximum speed
   Serial.println("Moving Backwards");
   setMotor(-1, 255, m1PwmChannel, in1, in2);
+  setMotor(-1, 255, m2PwmChannel, in3, in4);
   delay(2000);
 
   // Stop the DC motor
   Serial.println("Motor stopped");
   setMotor(0, 0, m1PwmChannel, in1, in2);
+  setMotor(0, 0, m2PwmChannel, in3, in4);
   delay(1000);
 
   // Move DC motor forward with increasing speed
   while (dutyCycle <= 255){
     // ledcWrite(m1PwmChannel, dutyCycle);  
-    setMotor(1, dutyCycle, ena, in1, in2);
+    setMotor(1, dutyCycle, m1PwmChannel, in1, in2);
+    setMotor(1, dutyCycle, m2PwmChannel, in3, in4);
     Serial.print("Forward with duty cycle: ");
     Serial.println(dutyCycle);
     dutyCycle = dutyCycle + 5;
@@ -286,10 +305,6 @@ void loop() {
 }
 
 
-/* TODO: Change pwm to pwmChannel
-** Note: pwmChannel and pwm are not the same but in this context are equivalent. 
-** They're the one who tell us who we are echoing the pwmVal
-*/
 void setMotor(int dir, int pwmVal, int pwmChannel, int in1, int in2)
 {
   
@@ -312,6 +327,7 @@ void setMotor(int dir, int pwmVal, int pwmChannel, int in1, int in2)
     digitalWrite(in2, LOW);
   }
 }
+
 
 void computeRpm(void)
 {
@@ -344,6 +360,7 @@ void computeRpm(void)
     Serial.println(N);
   }
 }
+
 
 // Encoder precisión cuádruple.
 void encoder(void)
