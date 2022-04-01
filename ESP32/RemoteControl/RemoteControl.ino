@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
-#include <MotionGenerator.h>
+//#include <MotionGenerator.h>
 // #include <util/atomic.h>
 
 // Constants
@@ -10,7 +10,7 @@ const char* password = "3672360107";
 
 // Globals
 WebSocketsServer webSocket = WebSocketsServer(80);
-MotionGenerator *trapezoidalProfile = new MotionGenerator(3960, 7920, 0);
+//MotionGenerator *trapezoidalProfile = new MotionGenerator(3960, 7920, 0);
 String inputString = "";
 bool stringComplete = false;
 
@@ -64,8 +64,60 @@ int target = 0;
 bool timeout = false;
 unsigned long lastTimeout = 0;
 
+bool newAction = false;
+String action = "";
 
-// Called when receiving any WebSocket message
+void setAction(uint8_t * payload) {
+  String payloadStr = (char*)payload;
+/*  
+  switch (payloadStr)
+  {
+  // Forwards
+  case "FW":
+    setMotor(1, 255, m1PwmChannel, in1, in2);
+    setMotor(1, 255, m2PwmChannel, in3, in4);
+    break;
+  // Backwards
+  case "BC":
+    setMotor(-1, 255, m1PwmChannel, in1, in2);
+    setMotor(-1, 255, m2PwmChannel, in3, in4);
+    break;
+  // LEFT
+  case "LF":
+    setMotor(1, 200, m1PwmChannel, in1, in2);
+    setMotor(1, 100, m2PwmChannel, in3, in4);
+    break;
+  // RIGHT
+  case "RG":
+    setMotor(1, 100, m1PwmChannel, in1, in2);
+    setMotor(1, 200, m2PwmChannel, in3, in4);
+    break;
+  // STOP
+  case "ST": 
+  default:
+    setMotor(0, 0, m1PwmChannel, in1, in2);
+    setMotor(0, 0, m2PwmChannel, in3, in4);
+    break;
+  }
+*/
+  if (payloadStr == "FW"){
+    setMotor(1, 255, m1PwmChannel, in1, in2);
+    setMotor(1, 255, m2PwmChannel, in3, in4);
+  } else if (payloadStr == "BC"){
+    setMotor(-1, 255, m1PwmChannel, in1, in2);
+    setMotor(-1, 255, m2PwmChannel, in3, in4);
+  } else if (payloadStr == "LF"){
+    setMotor(1, 200, m1PwmChannel, in1, in2);
+    setMotor(1, 150, m2PwmChannel, in3, in4);
+  } else if (payloadStr == "RG"){
+    setMotor(1, 150, m1PwmChannel, in1, in2);
+    setMotor(1, 200, m2PwmChannel, in3, in4);
+  } else {
+    setMotor(0, 0, m1PwmChannel, in1, in2);
+    setMotor(0, 0, m2PwmChannel, in3, in4);
+  }
+}
+
 void onWebSocketEvent(uint8_t num,
                       WStype_t type,
                       uint8_t * payload,
@@ -90,6 +142,7 @@ void onWebSocketEvent(uint8_t num,
     // Echo text message back to client
     case WStype_TEXT:
       Serial.printf("[%u] Text: %s\n", num, payload);
+      setAction(payload);
       webSocket.sendTXT(num, payload);
       break;
 
@@ -157,152 +210,55 @@ void setup() {
   Serial.println("Target Pos Profile -u");
   */
 }
-/*
+
 void loop() {
   // Look for and handle WebSocket data
   webSocket.loop();
 
-  if (!timeout) {
-    //  if (stringComplete) {
-    //    Cv = (double)inputString.toInt();
-    //    inputString = "";
-    //    stringComplete = false;
-    //  }
-
-    //  int target = R;
-    //  int target = R * sin(prevT / 1e6);
-
-    //    float positionRef = 1000;
-    target = trapezoidalProfile->update(10 * R);
-    float trapezoidalVel = trapezoidalProfile->getVelocity();
-
-    // PID constants
-    float kp = 1;
-    float kd = 0.080;
-    float ki = 0.0;
-
-    // time difference
-    long currT = micros();
-    float deltaT = ((float)(currT - prevT)) / (1.0e6);
-    prevT = currT;
-
-    int pos = 0;
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-    {
-      pos = n;
-    }
-    // Control error
-    int e = pos - target;
-    // derivative
-    float dedt = (e - eprev) / (deltaT);
-    // integral
-    eintegral = eintegral + e * deltaT;
-    // control signal
-    float u = kp * e + kd * dedt + ki * eintegral;
-
-    // motor power
-    float pwr = fabs(u);
-    if (pwr > 255)
-    {
-      pwr = 255;
-    }
-    // motor direction
-    int dir = 1;
-    if (u < 0)
-    {
-      dir = -1;
-    }
-    // signal the motor
-    setMotor(dir, pwr, ena, in1, in2);
-    // store previous error
-    eprev = e;
-
-    if (trapezoidalProfile->getFinished()) {
-      // Motors turn off
-      setMotor(0, pwr, ena, in1, in2);
-      timeout = true;
-      lastTimeout = millis();
-    }
-
-    Serial.print(target);
-    Serial.print(" ");
-    Serial.print(pos);
-    Serial.print(" ");
-    Serial.print(trapezoidalVel);
-    Serial.print(" ");
-    Serial.print(-u);
-    Serial.println();
-
-  }
-
-  if (timeout) {
-    if (millis() - lastTimeout >= 2000) {
-      timeout = false;
-
-      //    Reset pulse count
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-      {
-        n = 0;
-      }
-      prevT = 0;
-      eprev = 0;
-      eintegral = 0;
-      target = 0;
-      trapezoidalProfile->init();
-    }
-    Serial.print(0);
-    Serial.print(" ");
-    Serial.print(0);
-    Serial.print(" ");
-    Serial.print(trapezoidalProfile->getVelocity());
-    Serial.print(" ");
-    Serial.print(0);
-    Serial.println();
-  }
   //  computeRpm();
 }
-*/
+
 
 //Demo routine for motors
-void loop() {
-  // Move the DC motor forward at maximum speed
-  Serial.println("Moving Forward");
-  // digitalWrite(motor1Pin1, LOW);
-  // digitalWrite(motor1Pin2, HIGH); 
-  setMotor(1, 255, m1PwmChannel, in1, in2);
-  setMotor(1, 255, m2PwmChannel, in3, in4);
-  delay(2000);
+// void loop() {
+//   // Move the DC motor forward at maximum speed
+//   Serial.println("Moving Forward");
+//   // digitalWrite(motor1Pin1, LOW);
+//   // digitalWrite(motor1Pin2, HIGH); 
+//   setMotor(1, 255, m1PwmChannel, in1, in2);
+//   setMotor(1, 255, m2PwmChannel, in3, in4);
+//   delay(2000);
 
-  // Stop the DC motor
-  Serial.println("Motor stopped");
-  setMotor(0, 0, m1PwmChannel, in1, in2);
-  setMotor(0, 0, m2PwmChannel, in3, in4);
-  delay(1000);
+//   // Stop the DC motor
+//   Serial.println("Motor stopped");
+//   setMotor(0, 0, m1PwmChannel, in1, in2);
+//   setMotor(0, 0, m2PwmChannel, in3, in4);
+//   delay(1000);
 
-  // Move DC motor backwards at maximum speed
-  Serial.println("Moving Backwards");
-  setMotor(-1, 255, m1PwmChannel, in1, in2);
-  setMotor(-1, 255, m2PwmChannel, in3, in4);
-  delay(2000);
+//   // Move DC motor backwards at maximum speed
+//   Serial.println("Moving Backwards");
+//   setMotor(-1, 255, m1PwmChannel, in1, in2);
+//   setMotor(-1, 255, m2PwmChannel, in3, in4);
+//   delay(2000);
 
-  // Stop the DC motor
-  Serial.println("Motor stopped");
-  setMotor(0, 0, m1PwmChannel, in1, in2);
-  setMotor(0, 0, m2PwmChannel, in3, in4);
-  delay(1000);
+//   // Stop the DC motor
+//   Serial.println("Motor stopped");
+//   setMotor(0, 0, m1PwmChannel, in1, in2);
+//   setMotor(0, 0, m2PwmChannel, in3, in4);
+//   delay(1000);
 
-  // Move DC motor forward with increasing speed
-  while (dutyCycle <= 255){
-    // ledcWrite(m1PwmChannel, dutyCycle);  
-    setMotor(1, dutyCycle, m1PwmChannel, in1, in2);
-    setMotor(1, dutyCycle, m2PwmChannel, in3, in4);
-    Serial.print("Forward with duty cycle: ");
-    Serial.println(dutyCycle);
-    dutyCycle = dutyCycle + 5;
-    delay(500);
-  }
-  dutyCycle = 200;
-}
+//   // Move DC motor forward with increasing speed
+//   while (dutyCycle <= 255){
+//     // ledcWrite(m1PwmChannel, dutyCycle);  
+//     setMotor(1, dutyCycle, m1PwmChannel, in1, in2);
+//     setMotor(1, dutyCycle, m2PwmChannel, in3, in4);
+//     Serial.print("Forward with duty cycle: ");
+//     Serial.println(dutyCycle);
+//     dutyCycle = dutyCycle + 5;
+//     delay(500);
+//   }
+//   dutyCycle = 200;
+// }
 
 
 void setMotor(int dir, int pwmVal, int pwmChannel, int in1, int in2)
