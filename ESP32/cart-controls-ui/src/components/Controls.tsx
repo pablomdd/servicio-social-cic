@@ -19,7 +19,7 @@ type ControlsProps = {
 
 export default function Controls({ wsSendMessage, }: ControlsProps) {
 
-    const [sliderValue, setSliderValue] = React.useState(50)
+    const [sliderValue, setSliderValue] = React.useState(255);
 
     const onDirectionKey = (direction: string) => {
         console.log(direction);

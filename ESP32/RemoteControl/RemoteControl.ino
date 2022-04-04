@@ -65,17 +65,38 @@ int target = 0;
 bool timeout = false;
 unsigned long lastTimeout = 0;
 
+String lastAction = "FW";
+int vel_pwm = 255;
 
 void setAction(uint8_t * payload) {
   // TODO (Nit): It seems it's not a good idea to use a String due to performarce. 
   String payloadStr = (char*)payload;
 
+  if (isDigit(payloadStr.charAt(0))) {
+     Serial.println("velocity msg");
+     vel_pwm = payloadStr.toInt();
+     if (lastAction == "FW") {
+      setMotor(1, vel_pwm, m1PwmChannel, in1, in2);
+      setMotor(1, vel_pwm, m2PwmChannel, in3, in4);
+     } else {
+      setMotor(-1, vel_pwm, m1PwmChannel, in1, in2);
+      setMotor(-1, vel_pwm, m2PwmChannel, in3, in4);
+     }
+     return;
+  }
+
   if (payloadStr == "FW"){
-    setMotor(1, 255, m1PwmChannel, in1, in2);
-    setMotor(1, 255, m2PwmChannel, in3, in4);
+    lastAction = "FW";
+    Serial.print("FW ");
+    Serial.println(vel_pwm);
+    setMotor(1, vel_pwm, m1PwmChannel, in1, in2);
+    setMotor(1, vel_pwm, m2PwmChannel, in3, in4);
   } else if (payloadStr == "BC"){
-    setMotor(-1, 255, m1PwmChannel, in1, in2);
-    setMotor(-1, 255, m2PwmChannel, in3, in4);
+    lastAction = "BC";
+    Serial.print("BC ");
+    Serial.println(vel_pwm);
+    setMotor(-1, vel_pwm, m1PwmChannel, in1, in2);
+    setMotor(-1, vel_pwm, m2PwmChannel, in3, in4);
   } else if (payloadStr == "LF"){
     setMotor(1, 200, m1PwmChannel, in1, in2);
     setMotor(1, 150, m2PwmChannel, in3, in4);
